@@ -147,12 +147,13 @@ public class EventPublisher {
   }
 
   /**
-   * Method to publish a respondent Event.
+   * Method to publish an event
    *
-   * @param routingKey message routing key for event
+   * @param eventType the event type
+   * @param source the source
+   * @param channel the channel
    * @param payload message payload for event
    * @return String UUID transaction Id for event
-   * @throws CTPException
    */
   public String sendEvent(
       EventType eventType, Source source, Channel channel, EventPayload payload) {
