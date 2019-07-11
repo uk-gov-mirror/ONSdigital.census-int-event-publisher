@@ -2,7 +2,7 @@ package uk.gov.ons.ctp.common.event;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
-import uk.gov.ons.ctp.common.event.model.GenericEvent;
+import uk.gov.ons.ctp.common.event.model.CommonEvent;
 
 public class SpringRabbitEventSender implements EventSender {
 
@@ -13,7 +13,7 @@ public class SpringRabbitEventSender implements EventSender {
   }
 
   @Override
-  public void sendEvent(RoutingKey routingKey, GenericEvent genericEvent) {
+  public void sendEvent(RoutingKey routingKey, CommonEvent genericEvent) {
     template.convertAndSend(routingKey.getKey(), genericEvent);
   }
 }

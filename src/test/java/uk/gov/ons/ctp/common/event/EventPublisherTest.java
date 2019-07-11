@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-
 import java.util.Date;
 import java.util.UUID;
 import org.junit.Test;
@@ -24,20 +23,16 @@ import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
 import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
 import uk.gov.ons.ctp.common.event.EventPublisher.Source;
+import uk.gov.ons.ctp.common.event.model.CommonEvent;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequest;
-import uk.gov.ons.ctp.common.event.model.FulfilmentRequestedEvent;
-import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedEvent;
 import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedResponse;
 import uk.gov.ons.ctp.common.event.model.RespondentRefusalDetails;
-import uk.gov.ons.ctp.common.event.model.RespondentRefusalEvent;
-import uk.gov.ons.ctp.common.event.model.SurveyLaunchedEvent;
-import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
+import uk.gov.ons.ctp.common.event.model.Response;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EventPublisherTest {
 
-  private static final String ROUTING_KEY = "whereAreWeRoutingThis";
   private static final UUID CASE_ID = UUID.fromString("dc4477d1-dd3f-4c69-b181-7ff725dc9fa4");
   private static final String QUESTIONNAIRE_ID = "1110000009";
 
@@ -49,11 +44,11 @@ public class EventPublisherTest {
   @Test
   public void sendEventSurveyLaunchedPayload() throws Exception {
 
-    SurveyLaunchedResponse surveyLaunchedResponse =
-        SurveyLaunchedResponse.builder().questionnaireId(QUESTIONNAIRE_ID).caseId(CASE_ID).build();
+    Response surveyLaunchedResponse =
+        Response.builder().questionnaireId(QUESTIONNAIRE_ID).caseId(CASE_ID).build();
 
-    ArgumentCaptor<SurveyLaunchedEvent> eventCapture =
-        ArgumentCaptor.forClass(SurveyLaunchedEvent.class);
+    ArgumentCaptor<CommonEvent> eventCapture =
+        ArgumentCaptor.forClass(CommonEvent.class);
 
     String transactionId =
         eventPublisher.sendEvent(
@@ -61,7 +56,7 @@ public class EventPublisherTest {
 
     RoutingKey routingKey = RoutingKey.forType(EventType.RESPONDENT_AUTHENTICATED);
     verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
-    SurveyLaunchedEvent event = eventCapture.getValue();
+    CommonEvent event = eventCapture.getValue();
 
     assertEquals(event.getEvent().getTransactionId(), transactionId);
     assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
@@ -83,8 +78,8 @@ public class EventPublisherTest {
             .caseId(CASE_ID)
             .build();
 
-    ArgumentCaptor<RespondentAuthenticatedEvent> eventCapture =
-        ArgumentCaptor.forClass(RespondentAuthenticatedEvent.class);
+    ArgumentCaptor<CommonEvent> eventCapture =
+        ArgumentCaptor.forClass(CommonEvent.class);
 
     String transactionId =
         eventPublisher.sendEvent(
@@ -95,7 +90,7 @@ public class EventPublisherTest {
 
     RoutingKey routingKey = RoutingKey.forType(EventType.RESPONDENT_AUTHENTICATED);
     verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
-    RespondentAuthenticatedEvent event = eventCapture.getValue();
+    CommonEvent event = eventCapture.getValue();
 
     assertEquals(event.getEvent().getTransactionId(), transactionId);
     assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
@@ -103,8 +98,8 @@ public class EventPublisherTest {
     assertEquals(EventPublisher.Source.RESPONDENT_HOME, event.getEvent().getSource());
     assertEquals(EventPublisher.Channel.RH, event.getEvent().getChannel());
     assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
-    assertEquals(CASE_ID, event.getPayload().getResponse().getCaseId());
-    assertEquals(QUESTIONNAIRE_ID, event.getPayload().getResponse().getQuestionnaireId());
+    assertEquals(CASE_ID, event.getPayload().getRespondentAuthenticatedResponse().getCaseId());
+    assertEquals(QUESTIONNAIRE_ID, event.getPayload().getRespondentAuthenticatedResponse().getQuestionnaireId());
   }
 
   /** Test event message with FulfilmentRequest payload */
@@ -115,8 +110,8 @@ public class EventPublisherTest {
     FulfilmentRequest fulfilmentRequest = new FulfilmentRequest();
     fulfilmentRequest.setCaseId("id-123");
 
-    ArgumentCaptor<FulfilmentRequestedEvent> eventCapture =
-        ArgumentCaptor.forClass(FulfilmentRequestedEvent.class);
+    ArgumentCaptor<CommonEvent> eventCapture =
+        ArgumentCaptor.forClass(CommonEvent.class);
 
     String transactionId =
         eventPublisher.sendEvent(
@@ -127,7 +122,7 @@ public class EventPublisherTest {
 
     RoutingKey routingKey = RoutingKey.forType(EventType.FULFILMENT_REQUESTED);
     verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
-    FulfilmentRequestedEvent event = eventCapture.getValue();
+    CommonEvent event = eventCapture.getValue();
 
     assertEquals(event.getEvent().getTransactionId(), transactionId);
     assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
@@ -146,8 +141,8 @@ public class EventPublisherTest {
     RespondentRefusalDetails respondentRefusalDetails = new RespondentRefusalDetails();
     respondentRefusalDetails.setAgentId("x1");
 
-    ArgumentCaptor<RespondentRefusalEvent> eventCapture =
-        ArgumentCaptor.forClass(RespondentRefusalEvent.class);
+    ArgumentCaptor<CommonEvent> eventCapture =
+        ArgumentCaptor.forClass(CommonEvent.class);
 
     String transactionId =
         eventPublisher.sendEvent(
@@ -158,7 +153,7 @@ public class EventPublisherTest {
 
     RoutingKey routingKey = RoutingKey.forType(EventType.REFUSAL_RECEIVED);
     verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
-    RespondentRefusalEvent event = eventCapture.getValue();
+    CommonEvent event = eventCapture.getValue();
 
     assertEquals(event.getEvent().getTransactionId(), transactionId);
     assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));

@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GenericEvent {
+public class CommonEvent {
 
   private Header event;
+  
+  private CommonPayload payload;
 }

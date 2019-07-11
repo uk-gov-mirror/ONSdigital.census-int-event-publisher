@@ -1,28 +1,21 @@
 package uk.gov.ons.ctp.common.event;
 
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import lombok.Getter;
-import uk.gov.ons.ctp.common.event.model.CaseEvent;
-import uk.gov.ons.ctp.common.event.model.CasePayload;
 import uk.gov.ons.ctp.common.event.model.CollectionCase;
+import uk.gov.ons.ctp.common.event.model.CommonEvent;
+import uk.gov.ons.ctp.common.event.model.CommonPayload;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
-import uk.gov.ons.ctp.common.event.model.FulfilmentPayload;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequest;
-import uk.gov.ons.ctp.common.event.model.FulfilmentRequestedEvent;
-import uk.gov.ons.ctp.common.event.model.GenericEvent;
 import uk.gov.ons.ctp.common.event.model.Header;
-import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedEvent;
 import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedResponse;
 import uk.gov.ons.ctp.common.event.model.RespondentRefusalDetails;
-import uk.gov.ons.ctp.common.event.model.RespondentRefusalEvent;
-import uk.gov.ons.ctp.common.event.model.RespondentRefusalPayload;
-import uk.gov.ons.ctp.common.event.model.SurveyLaunchedEvent;
-import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
+import uk.gov.ons.ctp.common.event.model.Response;
 
 /** Service responsible for the publication of events. */
 public class EventPublisher {
@@ -94,7 +87,7 @@ public class EventPublisher {
     RESPONDENT_AUTHENTICATED(RespondentAuthenticatedResponse.class),
     RESPONSE_RECEIVED,
     SAMPLE_UNIT_VALIDATED,
-    SURVEY_LAUNCHED(SurveyLaunchedResponse.class),
+    SURVEY_LAUNCHED(Response.class),
     UAC_UPDATED,
     UNDELIVERED_MAIL_REPORTED;
 
@@ -168,48 +161,29 @@ public class EventPublisher {
           "Routing key for eventType " + eventType + " not configured");
     }
 
-    GenericEvent genericEvent = null;
+    CommonEvent commonEvent = new CommonEvent();
+    commonEvent.setEvent(buildHeader(eventType, source, channel));
+    CommonPayload commonPayload = new CommonPayload();
+    commonEvent.setPayload(commonPayload);
     switch (eventType) {
       case FULFILMENT_REQUESTED:
-        FulfilmentRequestedEvent fulfilmentRequestedEvent = new FulfilmentRequestedEvent();
-        fulfilmentRequestedEvent.setEvent(buildHeader(eventType, source, channel));
-        FulfilmentPayload fulfilmentPayload = new FulfilmentPayload((FulfilmentRequest) payload);
-        fulfilmentRequestedEvent.setPayload(fulfilmentPayload);
-        genericEvent = fulfilmentRequestedEvent;
+        commonPayload.setFulfilmentRequest((FulfilmentRequest) payload);
         break;
 
       case SURVEY_LAUNCHED:
-        SurveyLaunchedEvent surveyLaunchedEvent = new SurveyLaunchedEvent();
-        surveyLaunchedEvent.setEvent(buildHeader(eventType, source, channel));
-        surveyLaunchedEvent.getPayload().setResponse((SurveyLaunchedResponse) payload);
-        genericEvent = surveyLaunchedEvent;
+        commonPayload.setResponse((Response) payload);
         break;
 
       case RESPONDENT_AUTHENTICATED:
-        RespondentAuthenticatedEvent respondentAuthenticatedEvent =
-            new RespondentAuthenticatedEvent();
-        respondentAuthenticatedEvent.setEvent(buildHeader(eventType, source, channel));
-        respondentAuthenticatedEvent
-            .getPayload()
-            .setResponse((RespondentAuthenticatedResponse) payload);
-        genericEvent = respondentAuthenticatedEvent;
+        commonPayload.setRespondentAuthenticatedResponse((RespondentAuthenticatedResponse) payload);
         break;
 
       case CASE_CREATED:
-        CaseEvent caseEvent = new CaseEvent();
-        caseEvent.setEvent(buildHeader(eventType, source, channel));
-        CasePayload casePayload = new CasePayload((CollectionCase) payload);
-        caseEvent.setPayload(casePayload);
-        genericEvent = caseEvent;
+        commonPayload.setCollectionCase((CollectionCase) payload);
         break;
 
       case REFUSAL_RECEIVED:
-        RespondentRefusalEvent respondentRefusalEvent = new RespondentRefusalEvent();
-        respondentRefusalEvent.setEvent(buildHeader(eventType, source, channel));
-        RespondentRefusalPayload respondentRefusalPayload =
-            new RespondentRefusalPayload((RespondentRefusalDetails) payload);
-        respondentRefusalEvent.setPayload(respondentRefusalPayload);
-        genericEvent = respondentRefusalEvent;
+        commonPayload.setRefusal((RespondentRefusalDetails) payload);
         break;
 
       default:
@@ -218,12 +192,11 @@ public class EventPublisher {
             payload.getClass().getName() + " not supported yet");
     }
     try {
-      sender.sendEvent(routingKey, genericEvent);
+      sender.sendEvent(routingKey, commonEvent);
     } catch (Exception e) {
-      // diff sender impls may send diff exceptions
       throw new EventPublishException(e);
     }
-    return genericEvent.getEvent().getTransactionId();
+    return commonEvent.getEvent().getTransactionId();
   }
 
   private static Header buildHeader(EventType type, Source source, Channel channel) {

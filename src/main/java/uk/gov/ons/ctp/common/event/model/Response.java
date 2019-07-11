@@ -10,8 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RespondentAuthenticatedResponse implements EventPayload {
+public class Response implements EventPayload {
 
   private String questionnaireId;
   private UUID caseId;
+  private String agentId;
 }
