@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UAC {
+public class UAC implements EventPayload {
 
   private String uacHash;
   private String active;
