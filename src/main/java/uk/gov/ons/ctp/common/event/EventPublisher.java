@@ -1,11 +1,11 @@
 package uk.gov.ons.ctp.common.event;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
 import lombok.Getter;
 import uk.gov.ons.ctp.common.event.model.CaseEvent;
 import uk.gov.ons.ctp.common.event.model.CasePayload;
@@ -225,7 +225,8 @@ public class EventPublisher {
         break;
 
       default:
-        String errorMessage = payload.getClass().getName() + " for EventType '" + eventType + "' not supported yet";
+        String errorMessage =
+            payload.getClass().getName() + " for EventType '" + eventType + "' not supported yet";
         log.error(errorMessage);
         throw new UnsupportedOperationException(errorMessage);
     }
