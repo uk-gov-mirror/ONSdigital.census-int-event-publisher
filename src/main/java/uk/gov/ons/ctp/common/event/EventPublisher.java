@@ -160,15 +160,29 @@ public class EventPublisher {
   public String sendEvent(
       EventType eventType, Source source, Channel channel, EventPayload payload) {
 
+    log.debug(
+        "sendEvent(). EventType: '{}' Source: '{}' Channel: '{}' with payload '{}'",
+        eventType,
+        source,
+        channel,
+        payload.getClass());
+
     if (!payload.getClass().equals(eventType.getPayloadType())) {
-      throw new IllegalArgumentException(
-          "Payload type " + payload.getClass() + " incompatible for event type " + eventType);
+      String errorMessage =
+          "Payload type '"
+              + payload.getClass()
+              + "' incompatible for event type '"
+              + eventType
+              + "'";
+      log.error(errorMessage);
+      throw new IllegalArgumentException(errorMessage);
     }
 
     RoutingKey routingKey = RoutingKey.forType(eventType);
     if (routingKey == null) {
-      throw new UnsupportedOperationException(
-          "Routing key for eventType " + eventType + " not configured");
+      String errorMessage = "Routing key for eventType '" + eventType + "' not configured";
+      log.error(errorMessage);
+      throw new UnsupportedOperationException(errorMessage);
     }
 
     GenericEvent genericEvent = null;
@@ -231,9 +245,18 @@ public class EventPublisher {
         throw new UnsupportedOperationException(errorMessage);
     }
     try {
+      log.debug(
+          "Sending message of type '" + eventType + "' using routing key '" + routingKey + "'");
       sender.sendEvent(routingKey, genericEvent);
     } catch (Exception e) {
       // diff sender impls may send diff exceptions
+      log.error(
+          "Failed to send message of type '"
+              + eventType
+              + "' using routing key '"
+              + routingKey
+              + "'",
+          e);
       throw new EventPublishException(e);
     }
     return genericEvent.getEvent().getTransactionId();
