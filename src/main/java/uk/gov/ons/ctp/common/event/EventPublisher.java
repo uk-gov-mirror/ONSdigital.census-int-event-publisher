@@ -26,6 +26,9 @@ import uk.gov.ons.ctp.common.event.model.RespondentRefusalEvent;
 import uk.gov.ons.ctp.common.event.model.RespondentRefusalPayload;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
+import uk.gov.ons.ctp.common.event.model.UAC;
+import uk.gov.ons.ctp.common.event.model.UACEvent;
+import uk.gov.ons.ctp.common.event.model.UACPayload;
 
 /** Service responsible for the publication of events. */
 public class EventPublisher {
@@ -49,7 +52,7 @@ public class EventPublisher {
     EVENT_RESPONDENT_REFUSAL("event.respondent.refusal", EventType.REFUSAL_RECEIVED),
     EVENT_UAC_UPDATE("event.uac.update", EventType.UAC_UPDATED),
     EVENT_QUESTIONNAIRE_UPDATE("event.questionnaire.update", EventType.QUESTIONNAIRE_LINKED),
-    EVENT_CASE_UPDATE("event.case.update.event", EventType.CASE_UPDATED, EventType.CASE_CREATED),
+    EVENT_CASE_UPDATE("event.case.update", EventType.CASE_UPDATED, EventType.CASE_CREATED),
     EVENT_CASE_ADDRESS_UPDATE(
         "event.case.address.update",
         EventType.NEW_ADDRESS_REPORTED,
@@ -98,7 +101,7 @@ public class EventPublisher {
     RESPONSE_RECEIVED,
     SAMPLE_UNIT_VALIDATED,
     SURVEY_LAUNCHED(SurveyLaunchedResponse.class),
-    UAC_UPDATED,
+    UAC_UPDATED(UAC.class),
     UNDELIVERED_MAIL_REPORTED;
 
     private Class<? extends EventPayload> payloadType;
@@ -160,15 +163,29 @@ public class EventPublisher {
   public String sendEvent(
       EventType eventType, Source source, Channel channel, EventPayload payload) {
 
+    log.debug(
+        "sendEvent(). EventType: '{}' Source: '{}' Channel: '{}' with payload '{}'",
+        eventType,
+        source,
+        channel,
+        payload.getClass());
+
     if (!payload.getClass().equals(eventType.getPayloadType())) {
-      throw new IllegalArgumentException(
-          "Payload type " + payload.getClass() + " incompatible for event type " + eventType);
+      String errorMessage =
+          "Payload type '"
+              + payload.getClass()
+              + "' incompatible for event type '"
+              + eventType
+              + "'";
+      log.error(errorMessage);
+      throw new IllegalArgumentException(errorMessage);
     }
 
     RoutingKey routingKey = RoutingKey.forType(eventType);
     if (routingKey == null) {
-      throw new UnsupportedOperationException(
-          "Routing key for eventType " + eventType + " not configured");
+      String errorMessage = "Routing key for eventType '" + eventType + "' not configured";
+      log.error(errorMessage);
+      throw new UnsupportedOperationException(errorMessage);
     }
 
     GenericEvent genericEvent = null;
@@ -199,6 +216,7 @@ public class EventPublisher {
         break;
 
       case CASE_CREATED:
+      case CASE_UPDATED:
         CaseEvent caseEvent = new CaseEvent();
         caseEvent.setEvent(buildHeader(eventType, source, channel));
         CasePayload casePayload = new CasePayload((CollectionCase) payload);
@@ -215,6 +233,14 @@ public class EventPublisher {
         genericEvent = respondentRefusalEvent;
         break;
 
+      case UAC_UPDATED:
+        UACEvent uacEvent = new UACEvent();
+        uacEvent.setEvent(buildHeader(eventType, source, channel));
+        UACPayload uacPayload = new UACPayload((UAC) payload);
+        uacEvent.setPayload(uacPayload);
+        genericEvent = uacEvent;
+        break;
+
       case ADDRESS_MODIFIED:
         AddressModifiedEvent addressModifiedEvent = new AddressModifiedEvent();
         addressModifiedEvent.setEvent(buildHeader(eventType, source, channel));
@@ -225,14 +251,24 @@ public class EventPublisher {
         break;
 
       default:
-        log.error(payload.getClass().getName() + " not supported");
-        throw new UnsupportedOperationException(
-            payload.getClass().getName() + " not supported yet");
+        String errorMessage =
+            payload.getClass().getName() + " for EventType '" + eventType + "' not supported yet";
+        log.error(errorMessage);
+        throw new UnsupportedOperationException(errorMessage);
     }
     try {
+      log.debug(
+          "Sending message of type '" + eventType + "' using routing key '" + routingKey + "'");
       sender.sendEvent(routingKey, genericEvent);
     } catch (Exception e) {
       // diff sender impls may send diff exceptions
+      log.error(
+          "Failed to send message of type '"
+              + eventType
+              + "' using routing key '"
+              + routingKey
+              + "'",
+          e);
       throw new EventPublishException(e);
     }
     return genericEvent.getEvent().getTransactionId();
