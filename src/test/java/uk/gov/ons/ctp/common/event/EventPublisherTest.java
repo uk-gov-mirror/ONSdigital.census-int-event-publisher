@@ -24,6 +24,10 @@ import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
 import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
 import uk.gov.ons.ctp.common.event.EventPublisher.Source;
+import uk.gov.ons.ctp.common.event.model.AddressModification;
+import uk.gov.ons.ctp.common.event.model.AddressModified;
+import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
+import uk.gov.ons.ctp.common.event.model.CollectionCaseCompact;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequest;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequestedEvent;
@@ -40,6 +44,8 @@ public class EventPublisherTest {
   private static final String ROUTING_KEY = "whereAreWeRoutingThis";
   private static final UUID CASE_ID = UUID.fromString("dc4477d1-dd3f-4c69-b181-7ff725dc9fa4");
   private static final String QUESTIONNAIRE_ID = "1110000009";
+  private static final String UPRN_1 = "1";
+  private static final String UPRN_2 = "2";
 
   @InjectMocks private EventPublisher eventPublisher;
   @Mock private RabbitTemplate template;
@@ -188,5 +194,46 @@ public class EventPublisherTest {
     }
 
     assertTrue(exceptionThrown);
+  }
+
+  /** Test event message with SurveyLaunchedResponse payload */
+  @Test
+  public void sendEventAddressModificationPayload() throws Exception {
+
+    AddressModified originalAddress = new AddressModified();
+    AddressModified newAddress = new AddressModified();
+    originalAddress.setUprn(UPRN_1);
+    newAddress.setUprn(UPRN_2);
+
+    AddressModification addressModification =
+        AddressModification.builder()
+            .collectionCase(new CollectionCaseCompact())
+            .originalAddress(originalAddress)
+            .newAddress(newAddress)
+            .build();
+
+    ArgumentCaptor<AddressModifiedEvent> eventCapture =
+        ArgumentCaptor.forClass(AddressModifiedEvent.class);
+
+    String transactionId =
+        eventPublisher.sendEvent(
+            EventType.ADDRESS_MODIFIED, Source.RESPONDENT_HOME, Channel.RH, addressModification);
+
+    RoutingKey routingKey = RoutingKey.forType(EventType.ADDRESS_MODIFIED);
+    verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
+    AddressModifiedEvent event = eventCapture.getValue();
+
+    assertEquals(event.getEvent().getTransactionId(), transactionId);
+    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
+    assertEquals(EventPublisher.EventType.ADDRESS_MODIFIED, event.getEvent().getType());
+    assertEquals(EventPublisher.Source.RESPONDENT_HOME, event.getEvent().getSource());
+    assertEquals(EventPublisher.Channel.RH, event.getEvent().getChannel());
+    assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
+    assertEquals(
+        originalAddress.getUprn(),
+        event.getPayload().getAddressModification().getOriginalAddress().getUprn());
+    assertEquals(
+        newAddress.getUprn(),
+        event.getPayload().getAddressModification().getNewAddress().getUprn());
   }
 }

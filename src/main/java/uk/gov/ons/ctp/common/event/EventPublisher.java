@@ -7,6 +7,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import lombok.Getter;
+import uk.gov.ons.ctp.common.event.model.AddressModification;
+import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
+import uk.gov.ons.ctp.common.event.model.AddressModifiedPayload;
 import uk.gov.ons.ctp.common.event.model.CaseEvent;
 import uk.gov.ons.ctp.common.event.model.CasePayload;
 import uk.gov.ons.ctp.common.event.model.CollectionCase;
@@ -78,7 +81,7 @@ public class EventPublisher {
 
   @Getter
   public enum EventType {
-    ADDRESS_MODIFIED,
+    ADDRESS_MODIFIED(AddressModification.class),
     ADDRESS_NOT_VALID,
     ADDRESS_TYPE_CHANGED,
     APPOINTMENT_REQUESTED,
@@ -210,6 +213,15 @@ public class EventPublisher {
             new RespondentRefusalPayload((RespondentRefusalDetails) payload);
         respondentRefusalEvent.setPayload(respondentRefusalPayload);
         genericEvent = respondentRefusalEvent;
+        break;
+
+      case ADDRESS_MODIFIED:
+        AddressModifiedEvent addressModifiedEvent = new AddressModifiedEvent();
+        addressModifiedEvent.setEvent(buildHeader(eventType, source, channel));
+        AddressModifiedPayload addressModifiedPayload =
+            new AddressModifiedPayload((AddressModification) payload);
+        addressModifiedEvent.setPayload(addressModifiedPayload);
+        genericEvent = addressModifiedEvent;
         break;
 
       default:
