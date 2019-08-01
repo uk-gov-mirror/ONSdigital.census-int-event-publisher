@@ -37,7 +37,6 @@ import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class EventPublisherTest {
 
-  private static final String ROUTING_KEY = "whereAreWeRoutingThis";
   private static final UUID CASE_ID = UUID.fromString("dc4477d1-dd3f-4c69-b181-7ff725dc9fa4");
   private static final String QUESTIONNAIRE_ID = "1110000009";
 
