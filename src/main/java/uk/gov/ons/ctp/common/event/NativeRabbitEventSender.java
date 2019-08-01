@@ -22,22 +22,39 @@ public class NativeRabbitEventSender implements EventSender {
 
   ObjectMapper objectMapper;
 
+  public NativeRabbitEventSender(Connection rabbitConnection, String exchange)
+      throws CTPException {
+    this.connection = rabbitConnection;
+
+    try {
+      this.exchange = exchange;
+      channel = connection.createChannel();
+      channel.exchangeDeclare(exchange, "topic", true);
+    } catch (IOException e) {
+      String errorMessage = "Failed to create Rabbit channel";
+      log.error(e, errorMessage);
+      throw new CTPException(Fault.SYSTEM_ERROR, errorMessage);
+    }
+
+    objectMapper = new ObjectMapper();
+  }
+
   public NativeRabbitEventSender(RabbitConnectionDetails connectionDetails, String exchange)
       throws CTPException {
-    objectMapper = new ObjectMapper();
+    this(createRabbitConnection(connectionDetails), exchange);
+  }
 
+  private static Connection createRabbitConnection(RabbitConnectionDetails connectionDetails)
+      throws CTPException {
     ConnectionFactory factory = new ConnectionFactory();
     factory.setHost(connectionDetails.getHost());
     factory.setPort(connectionDetails.getPort());
     factory.setUsername(connectionDetails.getUser());
     factory.setPassword(connectionDetails.getPassword());
-    connection = null;
+    
     try {
-      connection = factory.newConnection();
-      this.exchange = exchange;
-      channel = connection.createChannel();
-      channel.exchangeDeclare(exchange, "topic", true);
-    } catch (TimeoutException | IOException e) {
+      return factory.newConnection();
+    } catch (IOException | TimeoutException e) {
       String errorMessage = "Failed to connect to Rabbit";
       log.error(e, errorMessage);
       throw new CTPException(Fault.SYSTEM_ERROR, errorMessage);
