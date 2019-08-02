@@ -22,8 +22,7 @@ public class NativeRabbitEventSender implements EventSender {
 
   ObjectMapper objectMapper;
 
-  public NativeRabbitEventSender(Connection rabbitConnection, String exchange)
-      throws CTPException {
+  public NativeRabbitEventSender(Connection rabbitConnection, String exchange) throws CTPException {
     this.connection = rabbitConnection;
 
     try {
@@ -51,7 +50,7 @@ public class NativeRabbitEventSender implements EventSender {
     factory.setPort(connectionDetails.getPort());
     factory.setUsername(connectionDetails.getUser());
     factory.setPassword(connectionDetails.getPassword());
-    
+
     try {
       return factory.newConnection();
     } catch (IOException | TimeoutException e) {
