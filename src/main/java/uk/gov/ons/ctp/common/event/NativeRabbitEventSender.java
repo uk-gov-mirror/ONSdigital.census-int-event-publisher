@@ -48,7 +48,7 @@ public class NativeRabbitEventSender implements EventSender {
     ConnectionFactory factory = new ConnectionFactory();
     factory.setHost(connectionDetails.getHost());
     factory.setPort(connectionDetails.getPort());
-    factory.setUsername(connectionDetails.getUser());
+    factory.setUsername(connectionDetails.getUsername());
     factory.setPassword(connectionDetails.getPassword());
 
     try {
