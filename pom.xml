@@ -75,10 +75,12 @@
       <artifactId>logging</artifactId>
     </dependency>
 
+    <!-- ONS libraries -->
+
     <dependency>
       <groupId>uk.gov.ons.ctp.integration.common</groupId>
       <artifactId>framework</artifactId>
-      <version>0.0.35</version>
+      <version>0.0.36</version>
     </dependency>
     
     <dependency>
