@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonRootName("rabbitmq")
+@JsonRootName("cucumberrabbitmq")
 public class RabbitConnectionDetails {
   private String host;
   private Integer port;
