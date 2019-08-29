@@ -13,6 +13,7 @@ public class UAC implements EventPayload {
 
   @LoggingScope(scope = Scope.SKIP)
   private String uacHash;
+
   private String active;
   private String questionnaireId;
   private String caseType;
