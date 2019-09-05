@@ -1,6 +1,6 @@
 package uk.gov.ons.ctp.common.event.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
 import uk.gov.ons.ctp.common.event.EventPublisher.Source;
-import uk.gov.ons.ctp.common.time.DateTimeUtil;
+import uk.gov.ons.ctp.common.jackson.CustomDateSerialiser;
 
 @Data
 @NoArgsConstructor
@@ -21,7 +21,7 @@ public class Header {
   private Source source;
   private Channel channel;
 
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateTimeUtil.DATE_FORMAT_IN_JSON)
+  @JsonSerialize(using = CustomDateSerialiser.class)
   private Date dateTime;
 
   private String transactionId;
