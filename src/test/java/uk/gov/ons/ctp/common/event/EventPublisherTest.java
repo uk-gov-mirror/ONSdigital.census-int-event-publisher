@@ -29,6 +29,8 @@ import uk.gov.ons.ctp.common.event.model.AddressModified;
 import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
 import uk.gov.ons.ctp.common.event.model.CollectionCaseCompact;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
+import uk.gov.ons.ctp.common.event.model.Feedback;
+import uk.gov.ons.ctp.common.event.model.FeedbackEvent;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequest;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequestedEvent;
 import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedEvent;
@@ -234,5 +236,35 @@ public class EventPublisherTest {
     assertEquals(
         newAddress.getUprn(),
         event.getPayload().getAddressModification().getNewAddress().getUprn());
+  }
+
+  /** Test event message with FeedbackResponse payload */
+  @Test
+  public void sendEventFeedbackPayload() throws Exception {
+
+    Feedback feedbackResponse = new Feedback();
+    feedbackResponse.setPageUrl("url-x");
+    feedbackResponse.setPageTitle("randomPage");
+    feedbackResponse.setFeedbackText("Bla bla bla");
+
+    ArgumentCaptor<FeedbackEvent> eventCapture = ArgumentCaptor.forClass(FeedbackEvent.class);
+
+    String transactionId =
+        eventPublisher.sendEvent(
+            EventType.FEEDBACK, Source.RESPONDENT_HOME, Channel.RM, feedbackResponse);
+
+    RoutingKey routingKey = RoutingKey.forType(EventType.FEEDBACK);
+    verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
+    FeedbackEvent event = eventCapture.getValue();
+
+    assertEquals(event.getEvent().getTransactionId(), transactionId);
+    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
+    assertEquals(EventPublisher.EventType.FEEDBACK, event.getEvent().getType());
+    assertEquals(EventPublisher.Source.RESPONDENT_HOME, event.getEvent().getSource());
+    assertEquals(EventPublisher.Channel.RM, event.getEvent().getChannel());
+    assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
+    assertEquals("url-x", event.getPayload().getFeedback().getPageUrl());
+    assertEquals("randomPage", event.getPayload().getFeedback().getPageTitle());
+    assertEquals("Bla bla bla", event.getPayload().getFeedback().getFeedbackText());
   }
 }
