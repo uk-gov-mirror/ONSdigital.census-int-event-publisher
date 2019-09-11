@@ -12,6 +12,7 @@ import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.CTPException.Fault;
 import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
 import uk.gov.ons.ctp.common.event.model.GenericEvent;
+import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
 
 public class NativeRabbitEventSender implements EventSender {
   private static final Logger log = LoggerFactory.getLogger(NativeRabbitEventSender.class);
@@ -35,7 +36,7 @@ public class NativeRabbitEventSender implements EventSender {
       throw new CTPException(Fault.SYSTEM_ERROR, errorMessage);
     }
 
-    objectMapper = new ObjectMapper();
+    objectMapper = new CustomObjectMapper();
   }
 
   public NativeRabbitEventSender(RabbitConnectionDetails connectionDetails, String exchange)
