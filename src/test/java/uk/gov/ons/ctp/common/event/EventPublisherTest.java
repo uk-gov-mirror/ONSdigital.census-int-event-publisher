@@ -251,7 +251,7 @@ public class EventPublisherTest {
 
     String transactionId =
         eventPublisher.sendEvent(
-            EventType.FEEDBACK, Source.RESPONDENT_HOME, Channel.RM, feedbackResponse);
+            EventType.FEEDBACK, Source.RESPONDENT_HOME, Channel.RH, feedbackResponse);
 
     RoutingKey routingKey = RoutingKey.forType(EventType.FEEDBACK);
     verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
@@ -261,7 +261,7 @@ public class EventPublisherTest {
     assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
     assertEquals(EventPublisher.EventType.FEEDBACK, event.getEvent().getType());
     assertEquals(EventPublisher.Source.RESPONDENT_HOME, event.getEvent().getSource());
-    assertEquals(EventPublisher.Channel.RM, event.getEvent().getChannel());
+    assertEquals(EventPublisher.Channel.RH, event.getEvent().getChannel());
     assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
     assertEquals("url-x", event.getPayload().getFeedback().getPageUrl());
     assertEquals("randomPage", event.getPayload().getFeedback().getPageTitle());
