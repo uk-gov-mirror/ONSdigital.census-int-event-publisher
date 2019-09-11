@@ -14,6 +14,9 @@ import uk.gov.ons.ctp.common.event.model.CaseEvent;
 import uk.gov.ons.ctp.common.event.model.CasePayload;
 import uk.gov.ons.ctp.common.event.model.CollectionCase;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
+import uk.gov.ons.ctp.common.event.model.Feedback;
+import uk.gov.ons.ctp.common.event.model.FeedbackEvent;
+import uk.gov.ons.ctp.common.event.model.FeedbackPayload;
 import uk.gov.ons.ctp.common.event.model.FulfilmentPayload;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequest;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequestedEvent;
@@ -62,7 +65,8 @@ public class EventPublisher {
     EVENT_CASE_APPOINTMENT("event.case.appointment", EventType.APPOINTMENT_REQUESTED),
     EVENT_FIELD_CASE_UPDATE("event.fieldcase.update", EventType.FIELD_CASE_UPDATED),
     EVENT_SAMPLE_UNIT_UPDATE("event.sampleunit.update", EventType.SAMPLE_UNIT_VALIDATED),
-    EVENT_CCS_PROPERTY_LISTING("event.ccs.propertylisting", EventType.CCS_PROPERTY_LISTED);
+    EVENT_CCS_PROPERTY_LISTING("event.ccs.propertylisting", EventType.CCS_PROPERTY_LISTED),
+    FEEDBACK("event.website.feedback", EventType.FEEDBACK);
 
     private String key;
     private List<EventType> eventTypes;
@@ -102,7 +106,8 @@ public class EventPublisher {
     SAMPLE_UNIT_VALIDATED,
     SURVEY_LAUNCHED(SurveyLaunchedResponse.class),
     UAC_UPDATED(UAC.class),
-    UNDELIVERED_MAIL_REPORTED;
+    UNDELIVERED_MAIL_REPORTED,
+    FEEDBACK(Feedback.class);
 
     private Class<? extends EventPayload> payloadType;
 
@@ -248,6 +253,14 @@ public class EventPublisher {
             new AddressModifiedPayload((AddressModification) payload);
         addressModifiedEvent.setPayload(addressModifiedPayload);
         genericEvent = addressModifiedEvent;
+        break;
+
+      case FEEDBACK:
+        FeedbackEvent feedbackEvent = new FeedbackEvent();
+        feedbackEvent.setEvent(buildHeader(eventType, source, channel));
+        FeedbackPayload feedbackPayload = new FeedbackPayload((Feedback) payload);
+        feedbackEvent.setPayload(feedbackPayload);
+        genericEvent = feedbackEvent;
         break;
 
       default:
