@@ -168,28 +168,25 @@ public class EventPublisher {
   public String sendEvent(
       EventType eventType, Source source, Channel channel, EventPayload payload) {
 
-    log.debug(
-        "sendEvent(). EventType: '{}' Source: '{}' Channel: '{}' with payload '{}'",
-        eventType,
-        source,
-        channel,
-        payload.getClass());
+    log.with(eventType).with(source).with(channel).with(payload).debug("sendEvent()");
 
     if (!payload.getClass().equals(eventType.getPayloadType())) {
+      log.with("payloadType", payload.getClass())
+          .with("eventType", eventType)
+          .error("Payload incompatible for event type");
       String errorMessage =
           "Payload type '"
               + payload.getClass()
               + "' incompatible for event type '"
               + eventType
               + "'";
-      log.error(errorMessage);
       throw new IllegalArgumentException(errorMessage);
     }
 
     RoutingKey routingKey = RoutingKey.forType(eventType);
     if (routingKey == null) {
+      log.with("eventType", eventType).error("Routing key for eventType not configured");
       String errorMessage = "Routing key for eventType '" + eventType + "' not configured";
-      log.error(errorMessage);
       throw new UnsupportedOperationException(errorMessage);
     }
 
@@ -264,24 +261,20 @@ public class EventPublisher {
         break;
 
       default:
+        log.with("eventType", eventType).error("Routing key for eventType not configured");
         String errorMessage =
             payload.getClass().getName() + " for EventType '" + eventType + "' not supported yet";
-        log.error(errorMessage);
         throw new UnsupportedOperationException(errorMessage);
     }
     try {
-      log.debug(
-          "Sending message of type '" + eventType + "' using routing key '" + routingKey + "'");
+      log.with("eventType", eventType).with("routingKey", routingKey).debug("sendimg message");
       sender.sendEvent(routingKey, genericEvent);
     } catch (Exception e) {
       // diff sender impls may send diff exceptions
-      log.error(
-          "Failed to send message of type '"
-              + eventType
-              + "' using routing key '"
-              + routingKey
-              + "'",
-          e);
+      log.with("eventType", eventType)
+          .with("routingKey", routingKey)
+          .with("exception", e)
+          .error("Failed to send event");
       throw new EventPublishException(e);
     }
     return genericEvent.getEvent().getTransactionId();
