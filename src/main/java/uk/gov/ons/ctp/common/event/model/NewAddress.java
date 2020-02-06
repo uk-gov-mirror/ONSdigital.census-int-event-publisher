@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class NewAddress {
+public class NewAddress implements EventPayload {
 
   private String sourceCaseId;
   private CollectionCase collectionCase;

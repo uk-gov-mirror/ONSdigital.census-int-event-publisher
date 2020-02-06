@@ -7,31 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import lombok.Getter;
-import uk.gov.ons.ctp.common.event.model.AddressModification;
-import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
-import uk.gov.ons.ctp.common.event.model.AddressModifiedPayload;
-import uk.gov.ons.ctp.common.event.model.CaseEvent;
-import uk.gov.ons.ctp.common.event.model.CasePayload;
-import uk.gov.ons.ctp.common.event.model.CollectionCase;
-import uk.gov.ons.ctp.common.event.model.EventPayload;
-import uk.gov.ons.ctp.common.event.model.Feedback;
-import uk.gov.ons.ctp.common.event.model.FeedbackEvent;
-import uk.gov.ons.ctp.common.event.model.FeedbackPayload;
-import uk.gov.ons.ctp.common.event.model.FulfilmentPayload;
-import uk.gov.ons.ctp.common.event.model.FulfilmentRequest;
-import uk.gov.ons.ctp.common.event.model.FulfilmentRequestedEvent;
-import uk.gov.ons.ctp.common.event.model.GenericEvent;
-import uk.gov.ons.ctp.common.event.model.Header;
-import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedEvent;
-import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedResponse;
-import uk.gov.ons.ctp.common.event.model.RespondentRefusalDetails;
-import uk.gov.ons.ctp.common.event.model.RespondentRefusalEvent;
-import uk.gov.ons.ctp.common.event.model.RespondentRefusalPayload;
-import uk.gov.ons.ctp.common.event.model.SurveyLaunchedEvent;
-import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
-import uk.gov.ons.ctp.common.event.model.UAC;
-import uk.gov.ons.ctp.common.event.model.UACEvent;
-import uk.gov.ons.ctp.common.event.model.UACPayload;
+import uk.gov.ons.ctp.common.event.model.*;
 
 /** Service responsible for the publication of events. */
 public class EventPublisher {
@@ -98,7 +74,7 @@ public class EventPublisher {
     FIELD_CASE_UPDATED,
     FULFILMENT_CONFIRMED,
     FULFILMENT_REQUESTED(FulfilmentRequest.class),
-    NEW_ADDRESS_REPORTED,
+    NEW_ADDRESS_REPORTED(NewAddress.class),
     QUESTIONNAIRE_LINKED,
     REFUSAL_RECEIVED(RespondentRefusalDetails.class),
     RESPONDENT_AUTHENTICATED(RespondentAuthenticatedResponse.class),
