@@ -228,6 +228,15 @@ public class EventPublisher {
         genericEvent = addressModifiedEvent;
         break;
 
+      case NEW_ADDRESS_REPORTED:
+        NewAddressReportedEvent newAddressReportedEvent = new NewAddressReportedEvent();
+        newAddressReportedEvent.setEvent(buildHeader(eventType, source, channel));
+        NewAddressPayload newAddressPayload =
+                new NewAddressPayload((NewAddress) payload);
+        newAddressReportedEvent.setPayload(newAddressPayload);
+        genericEvent = newAddressReportedEvent;
+        break;
+
       case FEEDBACK:
         FeedbackEvent feedbackEvent = new FeedbackEvent();
         feedbackEvent.setEvent(buildHeader(eventType, source, channel));
