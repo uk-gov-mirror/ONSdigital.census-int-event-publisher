@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 public class NewAddress implements EventPayload {
 
   private String sourceCaseId;
-  private CollectionCase collectionCase;
+  private CollectionCaseNewAddress collectionCase;
 }
