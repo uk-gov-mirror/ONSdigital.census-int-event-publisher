@@ -12,8 +12,8 @@ public class CollectionCaseNewAddress implements EventPayload {
   private String id;
   private String caseType;
   private String survey;
+  private String collectionExerciseId;
   private String fieldCoordinatorId;
   private String fieldOfficerId;
   private Address address = new Address();
 }
-
