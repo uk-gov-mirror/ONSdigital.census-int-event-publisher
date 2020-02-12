@@ -16,3 +16,4 @@ public class CollectionCaseNewAddress implements EventPayload {
   private String fieldOfficerId;
   private Address address = new Address();
 }
+
