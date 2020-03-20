@@ -152,6 +152,7 @@ public class EventPublisherTest {
     // Build fulfilment
     RespondentRefusalDetails respondentRefusalDetails = new RespondentRefusalDetails();
     respondentRefusalDetails.setAgentId("x1");
+    respondentRefusalDetails.setReason("HARD");
 
     ArgumentCaptor<RespondentRefusalEvent> eventCapture =
         ArgumentCaptor.forClass(RespondentRefusalEvent.class);
@@ -173,8 +174,10 @@ public class EventPublisherTest {
     assertEquals(EventPublisher.Source.CONTACT_CENTRE_API, event.getEvent().getSource());
     assertEquals(EventPublisher.Channel.CC, event.getEvent().getChannel());
     assertNotNull(event.getEvent().getDateTime());
-    assertEquals(
-        respondentRefusalDetails.getAgentId(), event.getPayload().getRefusal().getAgentId());
+
+    RespondentRefusalDetails payloadDetails = event.getPayload().getRefusal();
+    assertEquals(respondentRefusalDetails.getAgentId(), payloadDetails.getAgentId());
+    assertEquals("HARD", payloadDetails.getReason());
   }
 
   /** Test build of Respondent Authenticated event message with wrong pay load */

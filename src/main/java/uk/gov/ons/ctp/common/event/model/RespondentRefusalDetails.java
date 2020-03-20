@@ -15,4 +15,5 @@ public class RespondentRefusalDetails implements EventPayload {
   private CollectionCaseCompact collectionCase;
   private Contact contact;
   private AddressCompact address;
+  private String reason;
 }
