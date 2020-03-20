@@ -152,7 +152,7 @@ public class EventPublisherTest {
     // Build fulfilment
     RespondentRefusalDetails respondentRefusalDetails = new RespondentRefusalDetails();
     respondentRefusalDetails.setAgentId("x1");
-    respondentRefusalDetails.setReason("HARD");
+    respondentRefusalDetails.setType("EXTRAORDINARY_REFUSAL");
 
     ArgumentCaptor<RespondentRefusalEvent> eventCapture =
         ArgumentCaptor.forClass(RespondentRefusalEvent.class);
@@ -177,7 +177,7 @@ public class EventPublisherTest {
 
     RespondentRefusalDetails payloadDetails = event.getPayload().getRefusal();
     assertEquals(respondentRefusalDetails.getAgentId(), payloadDetails.getAgentId());
-    assertEquals("HARD", payloadDetails.getReason());
+    assertEquals("EXTRAORDINARY_REFUSAL", payloadDetails.getType());
   }
 
   /** Test build of Respondent Authenticated event message with wrong pay load */
