@@ -22,6 +22,9 @@ import uk.gov.ons.ctp.common.event.model.FulfilmentRequest;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequestedEvent;
 import uk.gov.ons.ctp.common.event.model.GenericEvent;
 import uk.gov.ons.ctp.common.event.model.Header;
+import uk.gov.ons.ctp.common.event.model.NewAddress;
+import uk.gov.ons.ctp.common.event.model.NewAddressPayload;
+import uk.gov.ons.ctp.common.event.model.NewAddressReportedEvent;
 import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedEvent;
 import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedResponse;
 import uk.gov.ons.ctp.common.event.model.RespondentRefusalDetails;
@@ -98,7 +101,7 @@ public class EventPublisher {
     FIELD_CASE_UPDATED,
     FULFILMENT_CONFIRMED,
     FULFILMENT_REQUESTED(FulfilmentRequest.class),
-    NEW_ADDRESS_REPORTED,
+    NEW_ADDRESS_REPORTED(NewAddress.class),
     QUESTIONNAIRE_LINKED,
     REFUSAL_RECEIVED(RespondentRefusalDetails.class),
     RESPONDENT_AUTHENTICATED(RespondentAuthenticatedResponse.class),
@@ -250,6 +253,14 @@ public class EventPublisher {
             new AddressModifiedPayload((AddressModification) payload);
         addressModifiedEvent.setPayload(addressModifiedPayload);
         genericEvent = addressModifiedEvent;
+        break;
+
+      case NEW_ADDRESS_REPORTED:
+        NewAddressReportedEvent newAddressReportedEvent = new NewAddressReportedEvent();
+        newAddressReportedEvent.setEvent(buildHeader(eventType, source, channel));
+        NewAddressPayload newAddressPayload = new NewAddressPayload((NewAddress) payload);
+        newAddressReportedEvent.setPayload(newAddressPayload);
+        genericEvent = newAddressReportedEvent;
         break;
 
       case FEEDBACK:

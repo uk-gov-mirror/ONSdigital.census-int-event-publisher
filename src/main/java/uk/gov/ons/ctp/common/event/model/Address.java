@@ -20,5 +20,6 @@ public class Address {
   private String uprn;
   private String arid;
   private String addressType;
+  private String addressLevel;
   private String estabType;
 }
