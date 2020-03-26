@@ -21,8 +21,5 @@ public class Contact {
   private String surname;
 
   @LoggingScope(scope = Scope.SKIP)
-  private String email;
-
-  @LoggingScope(scope = Scope.SKIP)
   private String telNo;
 }
