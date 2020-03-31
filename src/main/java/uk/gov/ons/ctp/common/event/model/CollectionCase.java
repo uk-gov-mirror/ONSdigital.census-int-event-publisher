@@ -17,4 +17,5 @@ public class CollectionCase implements EventPayload {
   private Address address = new Address();
   private Contact contact = new Contact();
   private String actionableFrom;
+  private boolean handDelivery;
 }
