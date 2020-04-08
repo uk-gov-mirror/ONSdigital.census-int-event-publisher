@@ -56,7 +56,7 @@ public class EventPublisher {
         EventType.SURVEY_LAUNCHED),
     EVENT_RESPONSE_RECEIPT("event.response.receipt", EventType.RESPONSE_RECEIVED),
     EVENT_RESPONDENT_REFUSAL("event.respondent.refusal", EventType.REFUSAL_RECEIVED),
-    EVENT_UAC_UPDATE("event.uac.update", EventType.UAC_UPDATED),
+    EVENT_UAC_UPDATE("event.uac.update", EventType.UAC_UPDATED, EventType.UAC_CREATED),
     EVENT_QUESTIONNAIRE_UPDATE("event.questionnaire.update", EventType.QUESTIONNAIRE_LINKED),
     EVENT_CASE_UPDATE("event.case.update", EventType.CASE_UPDATED, EventType.CASE_CREATED),
     EVENT_CASE_ADDRESS_UPDATE(
@@ -108,6 +108,7 @@ public class EventPublisher {
     RESPONSE_RECEIVED,
     SAMPLE_UNIT_VALIDATED,
     SURVEY_LAUNCHED(SurveyLaunchedResponse.class),
+    UAC_CREATED(UAC.class),
     UAC_UPDATED(UAC.class),
     UNDELIVERED_MAIL_REPORTED,
     FEEDBACK(Feedback.class);
@@ -238,6 +239,7 @@ public class EventPublisher {
         genericEvent = respondentRefusalEvent;
         break;
 
+      case UAC_CREATED:
       case UAC_UPDATED:
         UACEvent uacEvent = new UACEvent();
         uacEvent.setEvent(buildHeader(eventType, source, channel));
