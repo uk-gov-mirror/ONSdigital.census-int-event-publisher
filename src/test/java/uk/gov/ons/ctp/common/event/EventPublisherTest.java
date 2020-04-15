@@ -27,6 +27,8 @@ import uk.gov.ons.ctp.common.event.EventPublisher.Source;
 import uk.gov.ons.ctp.common.event.model.AddressModification;
 import uk.gov.ons.ctp.common.event.model.AddressModified;
 import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
+import uk.gov.ons.ctp.common.event.model.AddressNotValid;
+import uk.gov.ons.ctp.common.event.model.AddressNotValidEvent;
 import uk.gov.ons.ctp.common.event.model.CollectionCaseCompact;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
 import uk.gov.ons.ctp.common.event.model.Feedback;
@@ -239,6 +241,41 @@ public class EventPublisherTest {
     assertEquals(
         newAddress.getUprn(),
         event.getPayload().getAddressModification().getNewAddress().getUprn());
+  }
+
+  @Test
+  public void shouldSentAddressNotValid() throws Exception {
+    CollectionCaseCompact collectionCase = new CollectionCaseCompact(UUID.randomUUID());
+    AddressNotValid payload =
+        AddressNotValid.builder()
+            .collectionCase(collectionCase)
+            .notes("buy weetabix")
+            .reason("DERELICT")
+            .build();
+
+    ArgumentCaptor<AddressNotValidEvent> eventCapture =
+        ArgumentCaptor.forClass(AddressNotValidEvent.class);
+
+    String transactionId =
+        eventPublisher.sendEvent(
+            EventType.ADDRESS_NOT_VALID, Source.CONTACT_CENTRE_API, Channel.CC, payload);
+
+    RoutingKey routingKey = RoutingKey.forType(EventType.ADDRESS_NOT_VALID);
+    verify(sender).sendEvent(eq(routingKey), eventCapture.capture());
+    AddressNotValidEvent event = eventCapture.getValue();
+
+    assertEquals(event.getEvent().getTransactionId(), transactionId);
+    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
+    assertEquals(EventPublisher.EventType.ADDRESS_NOT_VALID, event.getEvent().getType());
+    assertEquals(EventPublisher.Source.CONTACT_CENTRE_API, event.getEvent().getSource());
+    assertEquals(EventPublisher.Channel.CC, event.getEvent().getChannel());
+    assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
+
+    AddressNotValid eventPayload = event.getPayload().getInvalidAddress();
+
+    assertEquals(collectionCase.getId(), eventPayload.getCollectionCase().getId());
+    assertEquals("buy weetabix", eventPayload.getNotes());
+    assertEquals("DERELICT", eventPayload.getReason());
   }
 
   /** Test event message with FeedbackResponse payload */
