@@ -10,6 +10,9 @@ import lombok.Getter;
 import uk.gov.ons.ctp.common.event.model.AddressModification;
 import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
 import uk.gov.ons.ctp.common.event.model.AddressModifiedPayload;
+import uk.gov.ons.ctp.common.event.model.AddressNotValid;
+import uk.gov.ons.ctp.common.event.model.AddressNotValidEvent;
+import uk.gov.ons.ctp.common.event.model.AddressNotValidPayload;
 import uk.gov.ons.ctp.common.event.model.CaseEvent;
 import uk.gov.ons.ctp.common.event.model.CasePayload;
 import uk.gov.ons.ctp.common.event.model.CollectionCase;
@@ -92,7 +95,7 @@ public class EventPublisher {
   @Getter
   public enum EventType {
     ADDRESS_MODIFIED(AddressModification.class),
-    ADDRESS_NOT_VALID,
+    ADDRESS_NOT_VALID(AddressNotValid.class),
     ADDRESS_TYPE_CHANGED,
     APPOINTMENT_REQUESTED,
     CASE_CREATED(CollectionCase.class),
@@ -257,6 +260,15 @@ public class EventPublisher {
         genericEvent = addressModifiedEvent;
         break;
 
+      case ADDRESS_NOT_VALID:
+        AddressNotValidEvent addrNotValidEvent = new AddressNotValidEvent();
+        addrNotValidEvent.setEvent(buildHeader(eventType, source, channel));
+        AddressNotValidPayload addrNotValidPayload =
+            new AddressNotValidPayload((AddressNotValid) payload);
+        addrNotValidEvent.setPayload(addrNotValidPayload);
+        genericEvent = addrNotValidEvent;
+        break;
+
       case NEW_ADDRESS_REPORTED:
         NewAddressReportedEvent newAddressReportedEvent = new NewAddressReportedEvent();
         newAddressReportedEvent.setEvent(buildHeader(eventType, source, channel));
@@ -280,7 +292,7 @@ public class EventPublisher {
         throw new UnsupportedOperationException(errorMessage);
     }
     try {
-      log.with("eventType", eventType).with("routingKey", routingKey).debug("sendimg message");
+      log.with("eventType", eventType).with("routingKey", routingKey).debug("sending message");
       sender.sendEvent(routingKey, genericEvent);
     } catch (Exception e) {
       // diff sender impls may send diff exceptions
