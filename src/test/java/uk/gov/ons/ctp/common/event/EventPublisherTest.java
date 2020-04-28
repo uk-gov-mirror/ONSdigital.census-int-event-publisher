@@ -307,4 +307,9 @@ public class EventPublisherTest {
     assertEquals("randomPage", event.getPayload().getFeedback().getPageTitle());
     assertEquals("Bla bla bla", event.getPayload().getFeedback().getFeedbackText());
   }
+
+  @Test
+  public void sendQuestionnaireLinkedPayload() throws Exception {
+    assertEquals("TODO", "PMB");
+  }
 }
