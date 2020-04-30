@@ -35,6 +35,8 @@ import uk.gov.ons.ctp.common.event.model.Feedback;
 import uk.gov.ons.ctp.common.event.model.FeedbackEvent;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequest;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequestedEvent;
+import uk.gov.ons.ctp.common.event.model.QuestionnaireLinkedDetails;
+import uk.gov.ons.ctp.common.event.model.QuestionnaireLinkedEvent;
 import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedEvent;
 import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedResponse;
 import uk.gov.ons.ctp.common.event.model.RespondentRefusalDetails;
@@ -310,6 +312,37 @@ public class EventPublisherTest {
 
   @Test
   public void sendQuestionnaireLinkedPayload() throws Exception {
-    assertEquals("TODO", "PMB");
+    String questionnaireId = "1110000009";
+    UUID caseId = UUID.randomUUID();
+    UUID individualCaseId = UUID.randomUUID();
+
+    QuestionnaireLinkedDetails questionnaireLinked = new QuestionnaireLinkedDetails();
+    questionnaireLinked.setQuestionnaireId(questionnaireId.toString());
+    questionnaireLinked.setCaseId(caseId);
+    questionnaireLinked.setIndividualCaseId(individualCaseId);
+
+    ArgumentCaptor<QuestionnaireLinkedEvent> eventCapture =
+        ArgumentCaptor.forClass(QuestionnaireLinkedEvent.class);
+
+    String transactionId =
+        eventPublisher.sendEvent(
+            EventType.QUESTIONNAIRE_LINKED,
+            Source.RESPONDENT_HOME,
+            Channel.RH,
+            questionnaireLinked);
+
+    RoutingKey routingKey = RoutingKey.forType(EventType.QUESTIONNAIRE_LINKED);
+    verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
+    QuestionnaireLinkedEvent event = eventCapture.getValue();
+
+    assertEquals(event.getEvent().getTransactionId(), transactionId);
+    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
+    assertEquals(EventPublisher.EventType.QUESTIONNAIRE_LINKED, event.getEvent().getType());
+    assertEquals(EventPublisher.Source.RESPONDENT_HOME, event.getEvent().getSource());
+    assertEquals(EventPublisher.Channel.RH, event.getEvent().getChannel());
+    assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
+    assertEquals(questionnaireId, event.getPayload().getUac().getQuestionnaireId());
+    assertEquals(caseId, event.getPayload().getUac().getCaseId());
+    assertEquals(individualCaseId, event.getPayload().getUac().getIndividualCaseId());
   }
 }

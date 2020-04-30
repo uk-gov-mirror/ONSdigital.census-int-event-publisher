@@ -108,7 +108,7 @@ public class EventPublisher {
     FULFILMENT_CONFIRMED,
     FULFILMENT_REQUESTED(FulfilmentRequest.class),
     NEW_ADDRESS_REPORTED(NewAddress.class),
-    QUESTIONNAIRE_LINKED,
+    QUESTIONNAIRE_LINKED(QuestionnaireLinkedDetails.class),
     REFUSAL_RECEIVED(RespondentRefusalDetails.class),
     RESPONDENT_AUTHENTICATED(RespondentAuthenticatedResponse.class),
     RESPONSE_RECEIVED,
