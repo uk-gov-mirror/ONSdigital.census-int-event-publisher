@@ -28,6 +28,9 @@ import uk.gov.ons.ctp.common.event.model.Header;
 import uk.gov.ons.ctp.common.event.model.NewAddress;
 import uk.gov.ons.ctp.common.event.model.NewAddressPayload;
 import uk.gov.ons.ctp.common.event.model.NewAddressReportedEvent;
+import uk.gov.ons.ctp.common.event.model.QuestionnaireLinkedDetails;
+import uk.gov.ons.ctp.common.event.model.QuestionnaireLinkedEvent;
+import uk.gov.ons.ctp.common.event.model.QuestionnaireLinkedPayload;
 import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedEvent;
 import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedResponse;
 import uk.gov.ons.ctp.common.event.model.RespondentRefusalDetails;
@@ -105,7 +108,7 @@ public class EventPublisher {
     FULFILMENT_CONFIRMED,
     FULFILMENT_REQUESTED(FulfilmentRequest.class),
     NEW_ADDRESS_REPORTED(NewAddress.class),
-    QUESTIONNAIRE_LINKED,
+    QUESTIONNAIRE_LINKED(QuestionnaireLinkedDetails.class),
     REFUSAL_RECEIVED(RespondentRefusalDetails.class),
     RESPONDENT_AUTHENTICATED(RespondentAuthenticatedResponse.class),
     RESPONSE_RECEIVED,
@@ -283,6 +286,15 @@ public class EventPublisher {
         FeedbackPayload feedbackPayload = new FeedbackPayload((Feedback) payload);
         feedbackEvent.setPayload(feedbackPayload);
         genericEvent = feedbackEvent;
+        break;
+
+      case QUESTIONNAIRE_LINKED:
+        QuestionnaireLinkedEvent questionnaireLinkedEvent = new QuestionnaireLinkedEvent();
+        questionnaireLinkedEvent.setEvent(buildHeader(eventType, source, channel));
+        QuestionnaireLinkedPayload questionnaireLinkedPayload =
+            new QuestionnaireLinkedPayload((QuestionnaireLinkedDetails) payload);
+        questionnaireLinkedEvent.setPayload(questionnaireLinkedPayload);
+        genericEvent = questionnaireLinkedEvent;
         break;
 
       default:
