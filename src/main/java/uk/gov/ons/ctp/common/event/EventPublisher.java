@@ -304,8 +304,9 @@ public class EventPublisher {
         throw new UnsupportedOperationException(errorMessage);
     }
     try {
-      log.with("eventType", eventType).with("routingKey", routingKey).debug("sending message");
+      log.with("eventType", eventType).with("routingKey", routingKey).debug("Sending message");
       sender.sendEvent(routingKey, genericEvent);
+      log.with("eventType", eventType).with("routingKey", routingKey).debug("Have sent message");
     } catch (Exception e) {
       // diff sender impls may send diff exceptions
       log.with("eventType", eventType)
