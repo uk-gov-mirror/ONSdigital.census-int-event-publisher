@@ -24,8 +24,8 @@ import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
 import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
 import uk.gov.ons.ctp.common.event.EventPublisher.Source;
+import uk.gov.ons.ctp.common.event.model.AddressCompact;
 import uk.gov.ons.ctp.common.event.model.AddressModification;
-import uk.gov.ons.ctp.common.event.model.AddressModified;
 import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
 import uk.gov.ons.ctp.common.event.model.AddressNotValid;
 import uk.gov.ons.ctp.common.event.model.AddressNotValidEvent;
@@ -208,8 +208,8 @@ public class EventPublisherTest {
   @Test
   public void sendEventAddressModificationPayload() throws Exception {
 
-    AddressModified originalAddress = new AddressModified();
-    AddressModified newAddress = new AddressModified();
+    AddressCompact originalAddress = new AddressCompact();
+    AddressCompact newAddress = new AddressCompact();
     originalAddress.setUprn(UPRN_1);
     newAddress.setUprn(UPRN_2);
 

@@ -7,18 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Address {
-
-  private String addressLine1;
-  private String addressLine2;
-  private String addressLine3;
-  private String townName;
-  private String postcode;
-  private String region; // E, W or N
+public class Address extends AddressCompact {
   private String latitude;
   private String longitude;
-  private String uprn;
-  private String arid;
+  private String estabUprn;
   private String addressType;
   private String addressLevel;
   private String estabType;

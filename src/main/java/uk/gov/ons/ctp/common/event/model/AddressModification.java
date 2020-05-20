@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class AddressModification implements EventPayload {
 
   private CollectionCaseCompact collectionCase;
-  private AddressModified originalAddress;
-  private AddressModified newAddress;
+  private AddressCompact originalAddress;
+  private AddressCompact newAddress;
 }
