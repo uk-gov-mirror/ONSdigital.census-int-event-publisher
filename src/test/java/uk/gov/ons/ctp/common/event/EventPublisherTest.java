@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 
 import java.util.Date;
 import java.util.UUID;
+import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -19,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
 import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
@@ -65,10 +67,9 @@ public class EventPublisherTest {
     assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
   }
 
-  /** Test event message with SurveyLaunchedResponse payload */
   @Test
   public void sendEventSurveyLaunchedPayload() {
-    SurveyLaunchedResponse surveyLaunchedResponse = EventFixture.createSurveyLaunchedResponse();
+    SurveyLaunchedResponse surveyLaunchedResponse = loadJson(SurveyLaunchedResponse[].class);
 
     ArgumentCaptor<SurveyLaunchedEvent> eventCapture =
         ArgumentCaptor.forClass(SurveyLaunchedEvent.class);
@@ -85,11 +86,10 @@ public class EventPublisherTest {
     assertEquals(surveyLaunchedResponse, event.getPayload().getResponse());
   }
 
-  /** Test event message with RespondentAuthenticatedResponse payload */
   @Test
   public void sendEventRespondentAuthenticatedPayload() {
     RespondentAuthenticatedResponse respondentAuthenticatedResponse =
-        EventFixture.createRespondentAuthenticatedResponse();
+        loadJson(RespondentAuthenticatedResponse[].class);
 
     ArgumentCaptor<RespondentAuthenticatedEvent> eventCapture =
         ArgumentCaptor.forClass(RespondentAuthenticatedEvent.class);
@@ -114,13 +114,9 @@ public class EventPublisherTest {
     assertEquals(respondentAuthenticatedResponse, event.getPayload().getResponse());
   }
 
-  /** Test event message with FulfilmentRequest payload */
   @Test
   public void sendEventFulfilmentRequestPayload() {
-
-    // Build fulfilment
-    FulfilmentRequest fulfilmentRequest = new FulfilmentRequest();
-    fulfilmentRequest.setCaseId("id-123");
+    FulfilmentRequest fulfilmentRequest = loadJson(FulfilmentRequest[].class);
 
     ArgumentCaptor<FulfilmentRequestedEvent> eventCapture =
         ArgumentCaptor.forClass(FulfilmentRequestedEvent.class);
@@ -145,11 +141,9 @@ public class EventPublisherTest {
     assertEquals("id-123", event.getPayload().getFulfilmentRequest().getCaseId());
   }
 
-  /** Test event message with RespondentRefusalDetails payload */
   @Test
   public void sendEventRespondentRefusalDetailsPayload() {
-    RespondentRefusalDetails respondentRefusalDetails =
-        EventFixture.createRespondentRefusalDetails();
+    RespondentRefusalDetails respondentRefusalDetails = loadJson(RespondentRefusalDetails[].class);
 
     ArgumentCaptor<RespondentRefusalEvent> eventCapture =
         ArgumentCaptor.forClass(RespondentRefusalEvent.class);
@@ -190,10 +184,9 @@ public class EventPublisherTest {
     assertTrue(exceptionThrown);
   }
 
-  /** Test event message with SurveyLaunchedResponse payload */
   @Test
   public void sendEventAddressModificationPayload() {
-    AddressModification addressModification = EventFixture.createAddressModification();
+    AddressModification addressModification = loadJson(AddressModification[].class);
 
     ArgumentCaptor<AddressModifiedEvent> eventCapture =
         ArgumentCaptor.forClass(AddressModifiedEvent.class);
@@ -213,7 +206,7 @@ public class EventPublisherTest {
 
   @Test
   public void shouldSentAddressNotValid() {
-    AddressNotValid payload = EventFixture.createAddressNotValid();
+    AddressNotValid payload = loadJson(AddressNotValid[].class);
 
     ArgumentCaptor<AddressNotValidEvent> eventCapture =
         ArgumentCaptor.forClass(AddressNotValidEvent.class);
@@ -232,7 +225,7 @@ public class EventPublisherTest {
   }
 
   private void assertSendCase(EventType type) {
-    CollectionCase payload = EventFixture.createCollectionCase();
+    CollectionCase payload = loadJson(CollectionCase[].class);
 
     ArgumentCaptor<CaseEvent> eventCapture = ArgumentCaptor.forClass(CaseEvent.class);
 
@@ -260,8 +253,7 @@ public class EventPublisherTest {
   /** Test event message with FeedbackResponse payload */
   @Test
   public void sendEventFeedbackPayload() {
-    Feedback feedbackResponse = EventFixture.createFeedback();
-
+    Feedback feedbackResponse = loadJson(Feedback[].class);
     ArgumentCaptor<FeedbackEvent> eventCapture = ArgumentCaptor.forClass(FeedbackEvent.class);
 
     String transactionId =
@@ -278,8 +270,7 @@ public class EventPublisherTest {
 
   @Test
   public void sendQuestionnaireLinkedPayload() {
-    QuestionnaireLinkedDetails questionnaireLinked =
-        EventFixture.createQuestionnaireLinkedDetails();
+    QuestionnaireLinkedDetails questionnaireLinked = loadJson(QuestionnaireLinkedDetails[].class);
 
     ArgumentCaptor<QuestionnaireLinkedEvent> eventCapture =
         ArgumentCaptor.forClass(QuestionnaireLinkedEvent.class);
@@ -298,5 +289,10 @@ public class EventPublisherTest {
     assertHeader(
         event, transactionId, EventType.QUESTIONNAIRE_LINKED, Source.RESPONDENT_HOME, Channel.RH);
     assertEquals(questionnaireLinked, event.getPayload().getUac());
+  }
+
+  @SneakyThrows
+  private <T> T loadJson(Class<T[]> clazz) {
+    return FixtureHelper.loadClassFixtures(clazz).get(0);
   }
 }
