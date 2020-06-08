@@ -1,8 +1,11 @@
 package uk.gov.ons.ctp.common.event.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import uk.gov.ons.ctp.common.jackson.CustomDateSerialiser;
 
 @Data
 @NoArgsConstructor
@@ -18,4 +21,8 @@ public class CollectionCase implements EventPayload {
   private Contact contact = new Contact();
   private String actionableFrom;
   private boolean handDelivery;
+  private boolean addressInvalid;
+
+  @JsonSerialize(using = CustomDateSerialiser.class)
+  private Date createdDateTime;
 }
