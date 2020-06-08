@@ -2,6 +2,7 @@
   "type" : "EXTRAORDINARY_REFUSAL",
   "report" : "Description of refusal",
   "agentId" : "x1",
+  "callId": "898-NOW",
   "collectionCase" : {
     "id" : "18353ceb-28cf-4a64-bee2-c4dc556d1268"
   },
