@@ -4,7 +4,6 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -12,6 +11,7 @@ import static org.mockito.Mockito.verify;
 
 import java.util.Date;
 import java.util.UUID;
+import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -20,21 +20,23 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
 import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
 import uk.gov.ons.ctp.common.event.EventPublisher.Source;
-import uk.gov.ons.ctp.common.event.model.AddressCompact;
 import uk.gov.ons.ctp.common.event.model.AddressModification;
 import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
 import uk.gov.ons.ctp.common.event.model.AddressNotValid;
 import uk.gov.ons.ctp.common.event.model.AddressNotValidEvent;
-import uk.gov.ons.ctp.common.event.model.CollectionCaseCompact;
+import uk.gov.ons.ctp.common.event.model.CaseEvent;
+import uk.gov.ons.ctp.common.event.model.CollectionCase;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
 import uk.gov.ons.ctp.common.event.model.Feedback;
 import uk.gov.ons.ctp.common.event.model.FeedbackEvent;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequest;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequestedEvent;
+import uk.gov.ons.ctp.common.event.model.GenericEvent;
 import uk.gov.ons.ctp.common.event.model.QuestionnaireLinkedDetails;
 import uk.gov.ons.ctp.common.event.model.QuestionnaireLinkedEvent;
 import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedEvent;
@@ -47,21 +49,27 @@ import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class EventPublisherTest {
 
-  private static final UUID CASE_ID = UUID.fromString("dc4477d1-dd3f-4c69-b181-7ff725dc9fa4");
-  private static final String QUESTIONNAIRE_ID = "1110000009";
-  private static final String UPRN_1 = "1";
-  private static final String UPRN_2 = "2";
-
   @InjectMocks private EventPublisher eventPublisher;
   @Mock private RabbitTemplate template;
   @Mock private SpringRabbitEventSender sender;
 
-  /** Test event message with SurveyLaunchedResponse payload */
-  @Test
-  public void sendEventSurveyLaunchedPayload() throws Exception {
+  private void assertHeader(
+      GenericEvent event,
+      String transactionId,
+      EventType expectedType,
+      Source expectedSource,
+      Channel expectedChannel) {
+    assertEquals(transactionId, event.getEvent().getTransactionId());
+    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
+    assertEquals(expectedType, event.getEvent().getType());
+    assertEquals(expectedSource, event.getEvent().getSource());
+    assertEquals(expectedChannel, event.getEvent().getChannel());
+    assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
+  }
 
-    SurveyLaunchedResponse surveyLaunchedResponse =
-        SurveyLaunchedResponse.builder().questionnaireId(QUESTIONNAIRE_ID).caseId(CASE_ID).build();
+  @Test
+  public void sendEventSurveyLaunchedPayload() {
+    SurveyLaunchedResponse surveyLaunchedResponse = loadJson(SurveyLaunchedResponse[].class);
 
     ArgumentCaptor<SurveyLaunchedEvent> eventCapture =
         ArgumentCaptor.forClass(SurveyLaunchedEvent.class);
@@ -73,26 +81,15 @@ public class EventPublisherTest {
     RoutingKey routingKey = RoutingKey.forType(EventType.RESPONDENT_AUTHENTICATED);
     verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
     SurveyLaunchedEvent event = eventCapture.getValue();
-
-    assertEquals(event.getEvent().getTransactionId(), transactionId);
-    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
-    assertEquals(EventPublisher.EventType.SURVEY_LAUNCHED, event.getEvent().getType());
-    assertEquals(EventPublisher.Source.RESPONDENT_HOME, event.getEvent().getSource());
-    assertEquals(EventPublisher.Channel.RH, event.getEvent().getChannel());
-    assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
-    assertEquals(CASE_ID, event.getPayload().getResponse().getCaseId());
-    assertEquals(QUESTIONNAIRE_ID, event.getPayload().getResponse().getQuestionnaireId());
+    assertHeader(
+        event, transactionId, EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH);
+    assertEquals(surveyLaunchedResponse, event.getPayload().getResponse());
   }
 
-  /** Test event message with RespondentAuthenticatedResponse payload */
   @Test
-  public void sendEventRespondentAuthenticatedPayload() throws Exception {
-
+  public void sendEventRespondentAuthenticatedPayload() {
     RespondentAuthenticatedResponse respondentAuthenticatedResponse =
-        RespondentAuthenticatedResponse.builder()
-            .questionnaireId(QUESTIONNAIRE_ID)
-            .caseId(CASE_ID)
-            .build();
+        loadJson(RespondentAuthenticatedResponse[].class);
 
     ArgumentCaptor<RespondentAuthenticatedEvent> eventCapture =
         ArgumentCaptor.forClass(RespondentAuthenticatedEvent.class);
@@ -108,23 +105,18 @@ public class EventPublisherTest {
     verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
     RespondentAuthenticatedEvent event = eventCapture.getValue();
 
-    assertEquals(event.getEvent().getTransactionId(), transactionId);
-    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
-    assertEquals(EventPublisher.EventType.RESPONDENT_AUTHENTICATED, event.getEvent().getType());
-    assertEquals(EventPublisher.Source.RESPONDENT_HOME, event.getEvent().getSource());
-    assertEquals(EventPublisher.Channel.RH, event.getEvent().getChannel());
-    assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
-    assertEquals(CASE_ID, event.getPayload().getResponse().getCaseId());
-    assertEquals(QUESTIONNAIRE_ID, event.getPayload().getResponse().getQuestionnaireId());
+    assertHeader(
+        event,
+        transactionId,
+        EventType.RESPONDENT_AUTHENTICATED,
+        Source.RESPONDENT_HOME,
+        Channel.RH);
+    assertEquals(respondentAuthenticatedResponse, event.getPayload().getResponse());
   }
 
-  /** Test event message with FulfilmentRequest payload */
   @Test
-  public void sendEventFulfilmentRequestPayload() throws Exception {
-
-    // Build fulfilment
-    FulfilmentRequest fulfilmentRequest = new FulfilmentRequest();
-    fulfilmentRequest.setCaseId("id-123");
+  public void sendEventFulfilmentRequestPayload() {
+    FulfilmentRequest fulfilmentRequest = loadJson(FulfilmentRequest[].class);
 
     ArgumentCaptor<FulfilmentRequestedEvent> eventCapture =
         ArgumentCaptor.forClass(FulfilmentRequestedEvent.class);
@@ -140,23 +132,18 @@ public class EventPublisherTest {
     verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
     FulfilmentRequestedEvent event = eventCapture.getValue();
 
-    assertEquals(event.getEvent().getTransactionId(), transactionId);
-    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
-    assertEquals(EventPublisher.EventType.FULFILMENT_REQUESTED, event.getEvent().getType());
-    assertEquals(EventPublisher.Source.CONTACT_CENTRE_API, event.getEvent().getSource());
-    assertEquals(EventPublisher.Channel.CC, event.getEvent().getChannel());
-    assertNotNull(event.getEvent().getDateTime());
+    assertHeader(
+        event,
+        transactionId,
+        EventType.FULFILMENT_REQUESTED,
+        Source.CONTACT_CENTRE_API,
+        Channel.CC);
     assertEquals("id-123", event.getPayload().getFulfilmentRequest().getCaseId());
   }
 
-  /** Test event message with RespondentRefusalDetails payload */
   @Test
-  public void sendEventRespondentRefusalDetailsPayload() throws Exception {
-
-    // Build fulfilment
-    RespondentRefusalDetails respondentRefusalDetails = new RespondentRefusalDetails();
-    respondentRefusalDetails.setAgentId("x1");
-    respondentRefusalDetails.setType("EXTRAORDINARY_REFUSAL");
+  public void sendEventRespondentRefusalDetailsPayload() {
+    RespondentRefusalDetails respondentRefusalDetails = loadJson(RespondentRefusalDetails[].class);
 
     ArgumentCaptor<RespondentRefusalEvent> eventCapture =
         ArgumentCaptor.forClass(RespondentRefusalEvent.class);
@@ -172,16 +159,9 @@ public class EventPublisherTest {
     verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
     RespondentRefusalEvent event = eventCapture.getValue();
 
-    assertEquals(event.getEvent().getTransactionId(), transactionId);
-    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
-    assertEquals(EventPublisher.EventType.REFUSAL_RECEIVED, event.getEvent().getType());
-    assertEquals(EventPublisher.Source.CONTACT_CENTRE_API, event.getEvent().getSource());
-    assertEquals(EventPublisher.Channel.CC, event.getEvent().getChannel());
-    assertNotNull(event.getEvent().getDateTime());
-
-    RespondentRefusalDetails payloadDetails = event.getPayload().getRefusal();
-    assertEquals(respondentRefusalDetails.getAgentId(), payloadDetails.getAgentId());
-    assertEquals("EXTRAORDINARY_REFUSAL", payloadDetails.getType());
+    assertHeader(
+        event, transactionId, EventType.REFUSAL_RECEIVED, Source.CONTACT_CENTRE_API, Channel.CC);
+    assertEquals(respondentRefusalDetails, event.getPayload().getRefusal());
   }
 
   /** Test build of Respondent Authenticated event message with wrong pay load */
@@ -204,21 +184,9 @@ public class EventPublisherTest {
     assertTrue(exceptionThrown);
   }
 
-  /** Test event message with SurveyLaunchedResponse payload */
   @Test
-  public void sendEventAddressModificationPayload() throws Exception {
-
-    AddressCompact originalAddress = new AddressCompact();
-    AddressCompact newAddress = new AddressCompact();
-    originalAddress.setUprn(UPRN_1);
-    newAddress.setUprn(UPRN_2);
-
-    AddressModification addressModification =
-        AddressModification.builder()
-            .collectionCase(new CollectionCaseCompact())
-            .originalAddress(originalAddress)
-            .newAddress(newAddress)
-            .build();
+  public void sendEventAddressModificationPayload() {
+    AddressModification addressModification = loadJson(AddressModification[].class);
 
     ArgumentCaptor<AddressModifiedEvent> eventCapture =
         ArgumentCaptor.forClass(AddressModifiedEvent.class);
@@ -231,29 +199,14 @@ public class EventPublisherTest {
     verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
     AddressModifiedEvent event = eventCapture.getValue();
 
-    assertEquals(event.getEvent().getTransactionId(), transactionId);
-    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
-    assertEquals(EventPublisher.EventType.ADDRESS_MODIFIED, event.getEvent().getType());
-    assertEquals(EventPublisher.Source.RESPONDENT_HOME, event.getEvent().getSource());
-    assertEquals(EventPublisher.Channel.RH, event.getEvent().getChannel());
-    assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
-    assertEquals(
-        originalAddress.getUprn(),
-        event.getPayload().getAddressModification().getOriginalAddress().getUprn());
-    assertEquals(
-        newAddress.getUprn(),
-        event.getPayload().getAddressModification().getNewAddress().getUprn());
+    assertHeader(
+        event, transactionId, EventType.ADDRESS_MODIFIED, Source.RESPONDENT_HOME, Channel.RH);
+    assertEquals(addressModification, event.getPayload().getAddressModification());
   }
 
   @Test
-  public void shouldSentAddressNotValid() throws Exception {
-    CollectionCaseCompact collectionCase = new CollectionCaseCompact(UUID.randomUUID());
-    AddressNotValid payload =
-        AddressNotValid.builder()
-            .collectionCase(collectionCase)
-            .notes("buy weetabix")
-            .reason("DERELICT")
-            .build();
+  public void shouldSentAddressNotValid() {
+    AddressNotValid payload = loadJson(AddressNotValid[].class);
 
     ArgumentCaptor<AddressNotValidEvent> eventCapture =
         ArgumentCaptor.forClass(AddressNotValidEvent.class);
@@ -266,29 +219,41 @@ public class EventPublisherTest {
     verify(sender).sendEvent(eq(routingKey), eventCapture.capture());
     AddressNotValidEvent event = eventCapture.getValue();
 
-    assertEquals(event.getEvent().getTransactionId(), transactionId);
-    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
-    assertEquals(EventPublisher.EventType.ADDRESS_NOT_VALID, event.getEvent().getType());
-    assertEquals(EventPublisher.Source.CONTACT_CENTRE_API, event.getEvent().getSource());
-    assertEquals(EventPublisher.Channel.CC, event.getEvent().getChannel());
-    assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
+    assertHeader(
+        event, transactionId, EventType.ADDRESS_NOT_VALID, Source.CONTACT_CENTRE_API, Channel.CC);
+    assertEquals(payload, event.getPayload().getInvalidAddress());
+  }
 
-    AddressNotValid eventPayload = event.getPayload().getInvalidAddress();
+  private void assertSendCase(EventType type) {
+    CollectionCase payload = loadJson(CollectionCase[].class);
 
-    assertEquals(collectionCase.getId(), eventPayload.getCollectionCase().getId());
-    assertEquals("buy weetabix", eventPayload.getNotes());
-    assertEquals("DERELICT", eventPayload.getReason());
+    ArgumentCaptor<CaseEvent> eventCapture = ArgumentCaptor.forClass(CaseEvent.class);
+
+    String transactionId =
+        eventPublisher.sendEvent(type, Source.CONTACT_CENTRE_API, Channel.CC, payload);
+
+    RoutingKey routingKey = RoutingKey.forType(type);
+    verify(sender).sendEvent(eq(routingKey), eventCapture.capture());
+    CaseEvent event = eventCapture.getValue();
+
+    assertHeader(event, transactionId, type, Source.CONTACT_CENTRE_API, Channel.CC);
+    assertEquals(payload, event.getPayload().getCollectionCase());
+  }
+
+  @Test
+  public void shouldSendCaseCreated() {
+    assertSendCase(EventType.CASE_CREATED);
+  }
+
+  @Test
+  public void shouldSendCaseUpdated() {
+    assertSendCase(EventType.CASE_UPDATED);
   }
 
   /** Test event message with FeedbackResponse payload */
   @Test
-  public void sendEventFeedbackPayload() throws Exception {
-
-    Feedback feedbackResponse = new Feedback();
-    feedbackResponse.setPageUrl("url-x");
-    feedbackResponse.setPageTitle("randomPage");
-    feedbackResponse.setFeedbackText("Bla bla bla");
-
+  public void sendEventFeedbackPayload() {
+    Feedback feedbackResponse = loadJson(Feedback[].class);
     ArgumentCaptor<FeedbackEvent> eventCapture = ArgumentCaptor.forClass(FeedbackEvent.class);
 
     String transactionId =
@@ -299,27 +264,13 @@ public class EventPublisherTest {
     verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
     FeedbackEvent event = eventCapture.getValue();
 
-    assertEquals(event.getEvent().getTransactionId(), transactionId);
-    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
-    assertEquals(EventPublisher.EventType.FEEDBACK, event.getEvent().getType());
-    assertEquals(EventPublisher.Source.RESPONDENT_HOME, event.getEvent().getSource());
-    assertEquals(EventPublisher.Channel.RH, event.getEvent().getChannel());
-    assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
-    assertEquals("url-x", event.getPayload().getFeedback().getPageUrl());
-    assertEquals("randomPage", event.getPayload().getFeedback().getPageTitle());
-    assertEquals("Bla bla bla", event.getPayload().getFeedback().getFeedbackText());
+    assertHeader(event, transactionId, EventType.FEEDBACK, Source.RESPONDENT_HOME, Channel.RH);
+    assertEquals(feedbackResponse, event.getPayload().getFeedback());
   }
 
   @Test
-  public void sendQuestionnaireLinkedPayload() throws Exception {
-    String questionnaireId = "1110000009";
-    UUID caseId = UUID.randomUUID();
-    UUID individualCaseId = UUID.randomUUID();
-
-    QuestionnaireLinkedDetails questionnaireLinked = new QuestionnaireLinkedDetails();
-    questionnaireLinked.setQuestionnaireId(questionnaireId.toString());
-    questionnaireLinked.setCaseId(caseId);
-    questionnaireLinked.setIndividualCaseId(individualCaseId);
+  public void sendQuestionnaireLinkedPayload() {
+    QuestionnaireLinkedDetails questionnaireLinked = loadJson(QuestionnaireLinkedDetails[].class);
 
     ArgumentCaptor<QuestionnaireLinkedEvent> eventCapture =
         ArgumentCaptor.forClass(QuestionnaireLinkedEvent.class);
@@ -335,14 +286,13 @@ public class EventPublisherTest {
     verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
     QuestionnaireLinkedEvent event = eventCapture.getValue();
 
-    assertEquals(event.getEvent().getTransactionId(), transactionId);
-    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
-    assertEquals(EventPublisher.EventType.QUESTIONNAIRE_LINKED, event.getEvent().getType());
-    assertEquals(EventPublisher.Source.RESPONDENT_HOME, event.getEvent().getSource());
-    assertEquals(EventPublisher.Channel.RH, event.getEvent().getChannel());
-    assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
-    assertEquals(questionnaireId, event.getPayload().getUac().getQuestionnaireId());
-    assertEquals(caseId, event.getPayload().getUac().getCaseId());
-    assertEquals(individualCaseId, event.getPayload().getUac().getIndividualCaseId());
+    assertHeader(
+        event, transactionId, EventType.QUESTIONNAIRE_LINKED, Source.RESPONDENT_HOME, Channel.RH);
+    assertEquals(questionnaireLinked, event.getPayload().getUac());
+  }
+
+  @SneakyThrows
+  private <T> T loadJson(Class<T[]> clazz) {
+    return FixtureHelper.loadClassFixtures(clazz).get(0);
   }
 }
