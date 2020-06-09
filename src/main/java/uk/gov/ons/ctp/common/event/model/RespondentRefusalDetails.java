@@ -12,6 +12,7 @@ public class RespondentRefusalDetails implements EventPayload {
   private String type;
   private String report;
   private String agentId;
+  private String callId;
   private CollectionCaseCompact collectionCase;
   private Contact contact;
   private AddressCompact address;
