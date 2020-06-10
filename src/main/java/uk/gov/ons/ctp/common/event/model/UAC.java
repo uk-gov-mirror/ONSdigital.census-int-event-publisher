@@ -16,9 +16,6 @@ public class UAC implements EventPayload {
 
   private String active;
   private String questionnaireId;
-  private String caseType;
-  private String region;
   private String caseId;
-  private String collectionExerciseId;
   private String formType;
 }
