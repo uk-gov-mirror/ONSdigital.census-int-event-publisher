@@ -1,0 +1,23 @@
+{
+  "collectionCase" : {
+    "id" : "18353ceb-28cf-4a64-bee2-c4dc556d1268"
+  },
+  "originalAddress" : {
+    "addressLine1" : "1 main street",
+    "addressLine2" : "upper upperingham",
+    "addressLine3" : "Lower Upton",
+    "townName" : "Upton",
+    "postcode" : "UP103UP",
+    "region" : "E",
+    "uprn" : "10013041069"
+  },
+  "newAddress" : {
+    "addressLine1" : "30 High Street",
+    "addressLine2" : "Magdalen House",
+    "addressLine3" : "",
+    "townName" : "Exeter",
+    "postcode" : "EX2 4HY",
+    "region" : "W",
+    "uprn" : "100041045599"
+  }
+}
