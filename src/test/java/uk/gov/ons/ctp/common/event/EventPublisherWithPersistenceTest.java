@@ -25,6 +25,7 @@ import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.error.CTPException;
+import uk.gov.ons.ctp.common.error.CTPException.Fault;
 import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
 import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
@@ -49,13 +50,15 @@ import uk.gov.ons.ctp.common.event.model.RespondentRefusalDetails;
 import uk.gov.ons.ctp.common.event.model.RespondentRefusalEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
+import uk.gov.ons.ctp.common.event.persistence.FirestoreEventPersistence;
 
 @RunWith(MockitoJUnitRunner.class)
-public class EventPublisherTest {
+public class EventPublisherWithPersistenceTest {
 
   @InjectMocks private EventPublisher eventPublisher;
   @Mock private RabbitTemplate template;
   @Mock private SpringRabbitEventSender sender;
+  @Mock private FirestoreEventPersistence eventPersistence;
 
   private void assertHeader(
       GenericEvent event,
@@ -75,11 +78,12 @@ public class EventPublisherTest {
   public void sendEventSurveyLaunchedPayload() {
     SurveyLaunchedResponse surveyLaunchedResponse = loadJson(SurveyLaunchedResponse[].class);
 
+    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
     ArgumentCaptor<SurveyLaunchedEvent> eventCapture =
         ArgumentCaptor.forClass(SurveyLaunchedEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithPersistance(
             EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveyLaunchedResponse);
 
     RoutingKey routingKey = RoutingKey.forType(EventType.RESPONDENT_AUTHENTICATED);
@@ -95,11 +99,12 @@ public class EventPublisherTest {
     RespondentAuthenticatedResponse respondentAuthenticatedResponse =
         loadJson(RespondentAuthenticatedResponse[].class);
 
+    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
     ArgumentCaptor<RespondentAuthenticatedEvent> eventCapture =
         ArgumentCaptor.forClass(RespondentAuthenticatedEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithPersistance(
             EventType.RESPONDENT_AUTHENTICATED,
             Source.RESPONDENT_HOME,
             Channel.RH,
@@ -122,11 +127,12 @@ public class EventPublisherTest {
   public void sendEventFulfilmentRequestPayload() {
     FulfilmentRequest fulfilmentRequest = loadJson(FulfilmentRequest[].class);
 
+    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
     ArgumentCaptor<FulfilmentRequestedEvent> eventCapture =
         ArgumentCaptor.forClass(FulfilmentRequestedEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithPersistance(
             EventType.FULFILMENT_REQUESTED,
             Source.CONTACT_CENTRE_API,
             Channel.CC,
@@ -149,11 +155,12 @@ public class EventPublisherTest {
   public void sendEventRespondentRefusalDetailsPayload() {
     RespondentRefusalDetails respondentRefusalDetails = loadJson(RespondentRefusalDetails[].class);
 
+    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
     ArgumentCaptor<RespondentRefusalEvent> eventCapture =
         ArgumentCaptor.forClass(RespondentRefusalEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithPersistance(
             EventType.REFUSAL_RECEIVED,
             Source.CONTACT_CENTRE_API,
             Channel.CC,
@@ -172,10 +179,12 @@ public class EventPublisherTest {
   @Test
   public void sendEventRespondentAuthenticatedWrongPayload() {
 
+    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
+
     boolean exceptionThrown = false;
 
     try {
-      eventPublisher.sendEvent(
+      eventPublisher.sendEventWithPersistance(
           EventType.ADDRESS_MODIFIED,
           Source.RECEIPT_SERVICE,
           Channel.CC,
@@ -192,11 +201,12 @@ public class EventPublisherTest {
   public void sendEventAddressModificationPayload() {
     AddressModification addressModification = loadJson(AddressModification[].class);
 
+    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
     ArgumentCaptor<AddressModifiedEvent> eventCapture =
         ArgumentCaptor.forClass(AddressModifiedEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithPersistance(
             EventType.ADDRESS_MODIFIED, Source.RESPONDENT_HOME, Channel.RH, addressModification);
 
     RoutingKey routingKey = RoutingKey.forType(EventType.ADDRESS_MODIFIED);
@@ -212,11 +222,12 @@ public class EventPublisherTest {
   public void shouldSentAddressNotValid() {
     AddressNotValid payload = loadJson(AddressNotValid[].class);
 
+    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
     ArgumentCaptor<AddressNotValidEvent> eventCapture =
         ArgumentCaptor.forClass(AddressNotValidEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithPersistance(
             EventType.ADDRESS_NOT_VALID, Source.CONTACT_CENTRE_API, Channel.CC, payload);
 
     RoutingKey routingKey = RoutingKey.forType(EventType.ADDRESS_NOT_VALID);
@@ -296,17 +307,64 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void eventSendingFailsWithException() throws CTPException {
+  public void eventPersistedWhenRabbitFails() throws CTPException {
     SurveyLaunchedResponse surveyLaunchedResponse = loadJson(SurveyLaunchedResponse[].class);
 
+    ArgumentCaptor<SurveyLaunchedEvent> eventCapture =
+        ArgumentCaptor.forClass(SurveyLaunchedEvent.class);
+
+    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
     Mockito.doThrow(new AmqpException("Failed to send")).when(sender).sendEvent(any(), any());
 
+    String transactionId =
+        eventPublisher.sendEventWithPersistance(
+            EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveyLaunchedResponse);
+
+    RoutingKey routingKey = RoutingKey.forType(EventType.RESPONDENT_AUTHENTICATED);
+    verify(eventPersistence, times(1))
+        .persistEvent(
+            eq(EventType.SURVEY_LAUNCHED),
+            eq(routingKey),
+            eventCapture.capture()); // ), eventCapture.capture());
+    SurveyLaunchedEvent event = eventCapture.getValue();
+    assertHeader(
+        event, transactionId, EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH);
+    assertEquals(surveyLaunchedResponse, event.getPayload().getResponse());
+  }
+
+  @Test
+  public void exceptionThrownWhenRabbitAndFirestoreFail() throws CTPException {
+    SurveyLaunchedResponse surveyLaunchedResponse = loadJson(SurveyLaunchedResponse[].class);
+
+    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
+    Mockito.doThrow(new AmqpException("Failed to send")).when(sender).sendEvent(any(), any());
+    Mockito.doThrow(new CTPException(Fault.SYSTEM_ERROR, "Firestore broken"))
+        .when(eventPersistence)
+        .persistEvent(any(), any(), any());
+
     try {
-      eventPublisher.sendEvent(
+      eventPublisher.sendEventWithPersistance(
           EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveyLaunchedResponse);
       fail();
-    } catch (EventPublishException e) {
-      assertTrue(e.getMessage(), e.getMessage().matches("Failed to publish .*"));
+    } catch (Exception e) {
+      assertTrue(
+          e.getMessage(),
+          e.getMessage().matches("Failed .* persist .* Firestore .* Rabbit failure"));
+    }
+  }
+
+  @Test
+  public void sendEventWithPersistanceFailsWithoutFirestoreConfig() throws CTPException {
+    SurveyLaunchedResponse surveyLaunchedResponse = loadJson(SurveyLaunchedResponse[].class);
+
+    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(false);
+
+    try {
+      eventPublisher.sendEventWithPersistance(
+          EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveyLaunchedResponse);
+      fail();
+    } catch (Exception e) {
+      assertTrue(e.getMessage(), e.getMessage().matches(".* not configured for Firestore .*"));
     }
   }
 
