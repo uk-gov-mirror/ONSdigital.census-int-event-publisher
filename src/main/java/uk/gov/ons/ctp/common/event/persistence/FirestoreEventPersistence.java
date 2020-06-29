@@ -12,7 +12,9 @@ import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
 import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
 import uk.gov.ons.ctp.common.event.model.GenericEvent;
 
-/** This class writes details about failed event sending into a Firestore backup collection. */
+/**
+ * This class saves details about an event which Rabbit failed to sent into a Firestore collection.
+ */
 @Service
 public class FirestoreEventPersistence implements EventPersistence {
 
