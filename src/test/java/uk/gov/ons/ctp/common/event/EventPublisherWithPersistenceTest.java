@@ -78,7 +78,7 @@ public class EventPublisherWithPersistenceTest {
   public void sendEventSurveyLaunchedPayload() {
     SurveyLaunchedResponse surveyLaunchedResponse = loadJson(SurveyLaunchedResponse[].class);
 
-    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
+    Mockito.when(eventPersistence.isFirestorePersistenceSupported()).thenReturn(true);
     ArgumentCaptor<SurveyLaunchedEvent> eventCapture =
         ArgumentCaptor.forClass(SurveyLaunchedEvent.class);
 
@@ -99,7 +99,7 @@ public class EventPublisherWithPersistenceTest {
     RespondentAuthenticatedResponse respondentAuthenticatedResponse =
         loadJson(RespondentAuthenticatedResponse[].class);
 
-    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
+    Mockito.when(eventPersistence.isFirestorePersistenceSupported()).thenReturn(true);
     ArgumentCaptor<RespondentAuthenticatedEvent> eventCapture =
         ArgumentCaptor.forClass(RespondentAuthenticatedEvent.class);
 
@@ -127,7 +127,7 @@ public class EventPublisherWithPersistenceTest {
   public void sendEventFulfilmentRequestPayload() {
     FulfilmentRequest fulfilmentRequest = loadJson(FulfilmentRequest[].class);
 
-    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
+    Mockito.when(eventPersistence.isFirestorePersistenceSupported()).thenReturn(true);
     ArgumentCaptor<FulfilmentRequestedEvent> eventCapture =
         ArgumentCaptor.forClass(FulfilmentRequestedEvent.class);
 
@@ -155,7 +155,7 @@ public class EventPublisherWithPersistenceTest {
   public void sendEventRespondentRefusalDetailsPayload() {
     RespondentRefusalDetails respondentRefusalDetails = loadJson(RespondentRefusalDetails[].class);
 
-    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
+    Mockito.when(eventPersistence.isFirestorePersistenceSupported()).thenReturn(true);
     ArgumentCaptor<RespondentRefusalEvent> eventCapture =
         ArgumentCaptor.forClass(RespondentRefusalEvent.class);
 
@@ -179,7 +179,7 @@ public class EventPublisherWithPersistenceTest {
   @Test
   public void sendEventRespondentAuthenticatedWrongPayload() {
 
-    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
+    Mockito.when(eventPersistence.isFirestorePersistenceSupported()).thenReturn(true);
 
     boolean exceptionThrown = false;
 
@@ -201,7 +201,7 @@ public class EventPublisherWithPersistenceTest {
   public void sendEventAddressModificationPayload() {
     AddressModification addressModification = loadJson(AddressModification[].class);
 
-    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
+    Mockito.when(eventPersistence.isFirestorePersistenceSupported()).thenReturn(true);
     ArgumentCaptor<AddressModifiedEvent> eventCapture =
         ArgumentCaptor.forClass(AddressModifiedEvent.class);
 
@@ -222,7 +222,7 @@ public class EventPublisherWithPersistenceTest {
   public void shouldSentAddressNotValid() {
     AddressNotValid payload = loadJson(AddressNotValid[].class);
 
-    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
+    Mockito.when(eventPersistence.isFirestorePersistenceSupported()).thenReturn(true);
     ArgumentCaptor<AddressNotValidEvent> eventCapture =
         ArgumentCaptor.forClass(AddressNotValidEvent.class);
 
@@ -313,7 +313,7 @@ public class EventPublisherWithPersistenceTest {
     ArgumentCaptor<SurveyLaunchedEvent> eventCapture =
         ArgumentCaptor.forClass(SurveyLaunchedEvent.class);
 
-    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
+    Mockito.when(eventPersistence.isFirestorePersistenceSupported()).thenReturn(true);
     Mockito.doThrow(new AmqpException("Failed to send")).when(sender).sendEvent(any(), any());
 
     String transactionId =
@@ -336,7 +336,7 @@ public class EventPublisherWithPersistenceTest {
   public void exceptionThrownWhenRabbitAndFirestoreFail() throws CTPException {
     SurveyLaunchedResponse surveyLaunchedResponse = loadJson(SurveyLaunchedResponse[].class);
 
-    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(true);
+    Mockito.when(eventPersistence.isFirestorePersistenceSupported()).thenReturn(true);
     Mockito.doThrow(new AmqpException("Failed to send")).when(sender).sendEvent(any(), any());
     Mockito.doThrow(new CTPException(Fault.SYSTEM_ERROR, "Firestore broken"))
         .when(eventPersistence)
@@ -357,7 +357,7 @@ public class EventPublisherWithPersistenceTest {
   public void sendEventWithPersistanceFailsWithoutFirestoreConfig() throws CTPException {
     SurveyLaunchedResponse surveyLaunchedResponse = loadJson(SurveyLaunchedResponse[].class);
 
-    Mockito.when(eventPersistence.firestorePersistenceSupported()).thenReturn(false);
+    Mockito.when(eventPersistence.isFirestorePersistenceSupported()).thenReturn(false);
 
     try {
       eventPublisher.sendEventWithPersistance(

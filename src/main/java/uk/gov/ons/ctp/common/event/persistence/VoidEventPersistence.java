@@ -6,13 +6,13 @@ import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
 import uk.gov.ons.ctp.common.event.model.GenericEvent;
 
 /**
- * This event persister is for applications which don't want the ability to persist event data in
- * the event of a Rabbit failure.
+ * This event persister is for applications which don't want to persist event data in Firestore if
+ * there is a Rabbit failure.
  */
 public class VoidEventPersistence implements EventPersistence {
 
   @Override
-  public boolean firestorePersistenceSupported() {
+  public boolean isFirestorePersistenceSupported() {
     return false;
   }
 

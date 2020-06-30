@@ -172,7 +172,7 @@ public class EventPublisher {
 
   /**
    * Method to publish an event. If the event cannot be sent then no attempt is made to persist the
-   * data and an exception is thrown.
+   * event data and an exception is thrown.
    *
    * @param eventType the event type
    * @param source the source
@@ -208,7 +208,7 @@ public class EventPublisher {
 
   /**
    * This method publishes events as per sendEvent(), except that in the event of a Rabbit failure
-   * it persists the message in Rabbit and no exception is thrown.
+   * it persists the message in Firestore and no exception is thrown.
    *
    * <p>If Rabbit fails to send the message and we also fail to persist the message in Firestore
    * then an EventPublishException is thrown.
@@ -231,8 +231,8 @@ public class EventPublisher {
     // Fail now if the application wants to use Firestore persistence in the event of failure, but
     // is not configured for it
     System.out.println(eventPersistence.getClass().getName());
-    System.out.println(eventPersistence.firestorePersistenceSupported());
-    if (!eventPersistence.firestorePersistenceSupported()) {
+    System.out.println(eventPersistence.isFirestorePersistenceSupported());
+    if (!eventPersistence.isFirestorePersistenceSupported()) {
       throw new EventPublishException("Application is not configured for Firestore persistence");
     }
 

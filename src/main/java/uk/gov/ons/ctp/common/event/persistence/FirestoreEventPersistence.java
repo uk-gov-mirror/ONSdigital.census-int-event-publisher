@@ -36,7 +36,7 @@ public class FirestoreEventPersistence implements EventPersistence {
   }
 
   @Override
-  public boolean firestorePersistenceSupported() {
+  public boolean isFirestorePersistenceSupported() {
     return true;
   }
 

@@ -11,7 +11,8 @@ import uk.gov.ons.ctp.common.event.model.GenericEvent;
 /**
  * This class holds data about an event which Rabbit failed to send.
  *
- * <p>This object is persisted into the backup event collection in Firestore for later resending.
+ * <p>If Rabbit fails to send an event then an instance of this object is persisted into the backup
+ * event collection in Firestore for later resending.
  */
 @Data
 @NoArgsConstructor

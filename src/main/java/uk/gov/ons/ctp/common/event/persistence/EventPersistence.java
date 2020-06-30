@@ -7,7 +7,7 @@ import uk.gov.ons.ctp.common.event.model.GenericEvent;
 
 public interface EventPersistence {
 
-  boolean firestorePersistenceSupported();
+  boolean isFirestorePersistenceSupported();
 
   void persistEvent(EventType eventType, RoutingKey routingKey, GenericEvent genericEvent)
       throws CTPException;

@@ -12,7 +12,7 @@ public class VoidEventPersistenceTest {
   public void testPersistenceSupported() {
     EventPersistence persistence = new VoidEventPersistence();
 
-    assertFalse(persistence.firestorePersistenceSupported());
+    assertFalse(persistence.isFirestorePersistenceSupported());
   }
 
   @Test

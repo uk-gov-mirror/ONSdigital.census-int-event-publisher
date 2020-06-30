@@ -31,7 +31,7 @@ public class FirestoreEventPersistenceTest {
   public void testPersistenceSupported() {
     EventPersistence persistence = new FirestoreEventPersistence();
 
-    assertTrue(persistence.firestorePersistenceSupported());
+    assertTrue(persistence.isFirestorePersistenceSupported());
   }
 
   @Test
