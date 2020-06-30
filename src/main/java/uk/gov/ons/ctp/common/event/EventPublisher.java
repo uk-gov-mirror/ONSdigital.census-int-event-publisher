@@ -241,9 +241,6 @@ public class EventPublisher {
 
     try {
       log.with("eventType", eventType).with("routingKey", routingKey).debug("Sending message");
-      //      if (payload.hashCode() != 666) {
-      //        throw new EventPublishException("PMB");
-      //      }
       sender.sendEvent(routingKey, genericEvent);
       log.with("eventType", eventType).with("routingKey", routingKey).debug("Have sent message");
 
@@ -256,6 +253,9 @@ public class EventPublisher {
 
       try {
         eventPersistence.persistEvent(eventType, routingKey, genericEvent);
+        log.with("eventType", eventType)
+            .with("routingKey", routingKey)
+            .info("Event data saved to Firestore");
       } catch (Exception epe) {
         // There is no hope. Neither Rabbit or Firestore are working
         log.with("eventType", eventType)
