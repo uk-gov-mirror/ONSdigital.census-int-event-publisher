@@ -250,6 +250,11 @@ public class EventPublisherTest {
     assertSendCase(EventType.CASE_UPDATED);
   }
 
+  @Test
+  public void shouldSendAddressTypeChanged() {
+    assertSendCase(EventType.ADDRESS_TYPE_CHANGED);
+  }
+
   /** Test event message with FeedbackResponse payload */
   @Test
   public void sendEventFeedbackPayload() {

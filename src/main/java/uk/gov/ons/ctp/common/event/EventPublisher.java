@@ -99,7 +99,7 @@ public class EventPublisher {
   public enum EventType {
     ADDRESS_MODIFIED(AddressModification.class),
     ADDRESS_NOT_VALID(AddressNotValid.class),
-    ADDRESS_TYPE_CHANGED,
+    ADDRESS_TYPE_CHANGED(CollectionCase.class),
     APPOINTMENT_REQUESTED,
     CASE_CREATED(CollectionCase.class),
     CASE_UPDATED(CollectionCase.class),
@@ -229,6 +229,7 @@ public class EventPublisher {
 
       case CASE_CREATED:
       case CASE_UPDATED:
+      case ADDRESS_TYPE_CHANGED:
         CaseEvent caseEvent = new CaseEvent();
         caseEvent.setEvent(buildHeader(eventType, source, channel));
         CasePayload casePayload = new CasePayload((CollectionCase) payload);
