@@ -79,7 +79,7 @@ public class EventPublisherTest {
         ArgumentCaptor.forClass(SurveyLaunchedEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithoutPersistance(
             EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveyLaunchedResponse);
 
     RoutingKey routingKey = RoutingKey.forType(EventType.RESPONDENT_AUTHENTICATED);
@@ -99,7 +99,7 @@ public class EventPublisherTest {
         ArgumentCaptor.forClass(RespondentAuthenticatedEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithoutPersistance(
             EventType.RESPONDENT_AUTHENTICATED,
             Source.RESPONDENT_HOME,
             Channel.RH,
@@ -126,7 +126,7 @@ public class EventPublisherTest {
         ArgumentCaptor.forClass(FulfilmentRequestedEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithoutPersistance(
             EventType.FULFILMENT_REQUESTED,
             Source.CONTACT_CENTRE_API,
             Channel.CC,
@@ -153,7 +153,7 @@ public class EventPublisherTest {
         ArgumentCaptor.forClass(RespondentRefusalEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithoutPersistance(
             EventType.REFUSAL_RECEIVED,
             Source.CONTACT_CENTRE_API,
             Channel.CC,
@@ -175,7 +175,7 @@ public class EventPublisherTest {
     boolean exceptionThrown = false;
 
     try {
-      eventPublisher.sendEvent(
+      eventPublisher.sendEventWithoutPersistance(
           EventType.ADDRESS_MODIFIED,
           Source.RECEIPT_SERVICE,
           Channel.CC,
@@ -196,7 +196,7 @@ public class EventPublisherTest {
         ArgumentCaptor.forClass(AddressModifiedEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithoutPersistance(
             EventType.ADDRESS_MODIFIED, Source.RESPONDENT_HOME, Channel.RH, addressModification);
 
     RoutingKey routingKey = RoutingKey.forType(EventType.ADDRESS_MODIFIED);
@@ -216,7 +216,7 @@ public class EventPublisherTest {
         ArgumentCaptor.forClass(AddressNotValidEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithoutPersistance(
             EventType.ADDRESS_NOT_VALID, Source.CONTACT_CENTRE_API, Channel.CC, payload);
 
     RoutingKey routingKey = RoutingKey.forType(EventType.ADDRESS_NOT_VALID);
@@ -234,7 +234,8 @@ public class EventPublisherTest {
     ArgumentCaptor<CaseEvent> eventCapture = ArgumentCaptor.forClass(CaseEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(type, Source.CONTACT_CENTRE_API, Channel.CC, payload);
+        eventPublisher.sendEventWithoutPersistance(
+            type, Source.CONTACT_CENTRE_API, Channel.CC, payload);
 
     RoutingKey routingKey = RoutingKey.forType(type);
     verify(sender).sendEvent(eq(routingKey), eventCapture.capture());
@@ -261,7 +262,7 @@ public class EventPublisherTest {
     ArgumentCaptor<FeedbackEvent> eventCapture = ArgumentCaptor.forClass(FeedbackEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithoutPersistance(
             EventType.FEEDBACK, Source.RESPONDENT_HOME, Channel.RH, feedbackResponse);
 
     RoutingKey routingKey = RoutingKey.forType(EventType.FEEDBACK);
@@ -280,7 +281,7 @@ public class EventPublisherTest {
         ArgumentCaptor.forClass(QuestionnaireLinkedEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithoutPersistance(
             EventType.QUESTIONNAIRE_LINKED,
             Source.RESPONDENT_HOME,
             Channel.RH,
@@ -302,7 +303,7 @@ public class EventPublisherTest {
     Mockito.doThrow(new AmqpException("Failed to send")).when(sender).sendEvent(any(), any());
 
     try {
-      eventPublisher.sendEvent(
+      eventPublisher.sendEventWithoutPersistance(
           EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveyLaunchedResponse);
       fail();
     } catch (EventPublishException e) {
@@ -312,6 +313,6 @@ public class EventPublisherTest {
 
   @SneakyThrows
   private <T> T loadJson(Class<T[]> clazz) {
-    return FixtureHelper.loadClassFixtures(clazz).get(0);
+    return FixtureHelper.loadPackageFixtures(clazz).get(0);
   }
 }

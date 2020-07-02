@@ -1,11 +1,11 @@
 package uk.gov.ons.ctp.common.event;
 
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import lombok.Getter;
 import uk.gov.ons.ctp.common.event.model.AddressModification;
 import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
@@ -51,7 +51,7 @@ public class EventPublisher {
   private EventSender sender;
 
   private EventPersistence eventPersistence;
-
+  
   @Getter
   public enum RoutingKey {
     //// @formatter:off
@@ -163,7 +163,9 @@ public class EventPublisher {
   /**
    * Constructor taking publishing helper class
    *
-   * @param eventSender the impl of EventSender that will be used to ... send the event
+   * @param eventSender the impl of EventSender that will be used to ... send the event.
+   * @param eventPersistance is an EventPersistence implementation which supports will decide 
+   * how to persist the event details should Rabbit fail.  
    */
   public EventPublisher(EventSender eventSender, EventPersistence eventPersistence) {
     this.sender = eventSender;
@@ -180,30 +182,16 @@ public class EventPublisher {
    * @param payload message payload for event
    * @return String UUID transaction Id for event
    */
-  public String sendEvent(
+  public String sendEventWithoutPersistance(
       EventType eventType, Source source, Channel channel, EventPayload payload) {
 
-    log.with(eventType).with(source).with(channel).with(payload).debug("Enter sendEvent()");
+    log.with(eventType).with(source).with(channel).with(payload).debug("Enter sendEventWithoutPersistance()");
 
-    RoutingKey routingKey = createRoutingKey(eventType, payload);
-    GenericEvent genericEvent = createGenericEvent(eventType, source, channel, payload);
+    String transactionId = doSendEvent(eventType, source, channel, payload);
 
-    try {
-      log.with("eventType", eventType).with("routingKey", routingKey).debug("Sending message");
-      sender.sendEvent(routingKey, genericEvent);
-      log.with("eventType", eventType).with("routingKey", routingKey).debug("Have sent message");
-    } catch (Exception e) {
-      // diff sender impls may send diff exceptions
-      log.with("eventType", eventType)
-          .with("routingKey", routingKey)
-          .with("exception", e)
-          .error("Failed to send event");
-      throw new EventPublishException(e);
-    }
+    log.with(eventType).with(source).with(channel).with(payload).debug("Exit sendEventWithoutPersistance()");
 
-    log.with(eventType).with(source).with(channel).with(payload).debug("Exit sendEvent()");
-
-    return genericEvent.getEvent().getTransactionId();
+    return transactionId;
   }
 
   /**
@@ -230,42 +218,11 @@ public class EventPublisher {
 
     // Fail now if the application wants to use Firestore persistence in the event of failure, but
     // is not configured for it
-    System.out.println(eventPersistence.getClass().getName());
-    System.out.println(eventPersistence.isFirestorePersistenceSupported());
     if (!eventPersistence.isFirestorePersistenceSupported()) {
       throw new EventPublishException("Application is not configured for Firestore persistence");
     }
 
-    RoutingKey routingKey = createRoutingKey(eventType, payload);
-    GenericEvent genericEvent = createGenericEvent(eventType, source, channel, payload);
-
-    try {
-      log.with("eventType", eventType).with("routingKey", routingKey).debug("Sending message");
-      sender.sendEvent(routingKey, genericEvent);
-      log.with("eventType", eventType).with("routingKey", routingKey).debug("Have sent message");
-
-    } catch (Exception e) {
-      // diff sender impls may send diff exceptions
-      log.with("eventType", eventType)
-          .with("routingKey", routingKey)
-          .with("exception", e)
-          .warn("Failed to send event");
-
-      try {
-        eventPersistence.persistEvent(eventType, routingKey, genericEvent);
-        log.with("eventType", eventType)
-            .with("routingKey", routingKey)
-            .info("Event data saved to Firestore");
-      } catch (Exception epe) {
-        // There is no hope. Neither Rabbit or Firestore are working
-        log.with("eventType", eventType)
-            .with("routingKey", routingKey)
-            .with("exception", e)
-            .warn("Failed to send event");
-        throw new EventPublishException(
-            "Failed to persist event data in Firestore following Rabbit failure", epe);
-      }
-    }
+    String transactionId = doSendEvent(eventType, source, channel, payload);
 
     log.with(eventType)
         .with(source)
@@ -273,10 +230,12 @@ public class EventPublisher {
         .with(payload)
         .debug("Exit sendEventWithPersistance()");
 
-    return genericEvent.getEvent().getTransactionId();
+    return transactionId;
   }
 
-  private RoutingKey createRoutingKey(EventType eventType, EventPayload payload) {
+  private String doSendEvent(
+      EventType eventType, Source source, Channel channel, EventPayload payload) {
+
     if (!payload.getClass().equals(eventType.getPayloadType())) {
       log.with("payloadType", payload.getClass())
           .with("eventType", eventType)
@@ -296,11 +255,7 @@ public class EventPublisher {
       String errorMessage = "Routing key for eventType '" + eventType + "' not configured";
       throw new UnsupportedOperationException(errorMessage);
     }
-    return routingKey;
-  }
 
-  private GenericEvent createGenericEvent(
-      EventType eventType, Source source, Channel channel, EventPayload payload) {
     GenericEvent genericEvent = null;
     switch (eventType) {
       case FULFILMENT_REQUESTED:
@@ -404,7 +359,40 @@ public class EventPublisher {
             payload.getClass().getName() + " for EventType '" + eventType + "' not supported yet";
         throw new UnsupportedOperationException(errorMessage);
     }
-    return genericEvent;
+    
+    try {
+      log.with("eventType", eventType).with("routingKey", routingKey).debug("Sending message");
+      sender.sendEvent(routingKey, genericEvent);
+      log.with("eventType", eventType).with("routingKey", routingKey).debug("Have sent message");
+    } catch (Exception e) {
+      // diff sender impls may send diff exceptions
+      log.with("eventType", eventType)
+        .with("routingKey", routingKey)
+        .with("exception", e)
+        .error("Failed to send event");
+
+      if (!eventPersistence.isFirestorePersistenceSupported()) {
+        throw new EventPublishException("Rabbit failed to send event", e);
+      }
+
+      // Save event to Firestore
+      try {
+        eventPersistence.persistEvent(eventType, routingKey, genericEvent);
+        log.with("eventType", eventType)
+            .with("routingKey", routingKey)
+            .info("Event data saved to Firestore");
+      } catch (Exception epe) {
+        // There is no hope. Neither Rabbit or Firestore are working
+        log.with("eventType", eventType)
+            .with("routingKey", routingKey)
+            .with("exception", epe)
+            .error("Failed to persist event data in Firestore following Rabbit failure");
+        throw new EventPublishException(
+            "Failed to persist event data in Firestore following Rabbit failure", epe);
+      }
+    }
+    
+    return genericEvent.getEvent().getTransactionId();
   }
 
   private static Header buildHeader(EventType type, Source source, Channel channel) {

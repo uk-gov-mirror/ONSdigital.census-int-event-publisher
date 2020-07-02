@@ -245,7 +245,8 @@ public class EventPublisherWithPersistenceTest {
     ArgumentCaptor<CaseEvent> eventCapture = ArgumentCaptor.forClass(CaseEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(type, Source.CONTACT_CENTRE_API, Channel.CC, payload);
+        eventPublisher.sendEventWithoutPersistance(
+            type, Source.CONTACT_CENTRE_API, Channel.CC, payload);
 
     RoutingKey routingKey = RoutingKey.forType(type);
     verify(sender).sendEvent(eq(routingKey), eventCapture.capture());
@@ -272,7 +273,7 @@ public class EventPublisherWithPersistenceTest {
     ArgumentCaptor<FeedbackEvent> eventCapture = ArgumentCaptor.forClass(FeedbackEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithoutPersistance(
             EventType.FEEDBACK, Source.RESPONDENT_HOME, Channel.RH, feedbackResponse);
 
     RoutingKey routingKey = RoutingKey.forType(EventType.FEEDBACK);
@@ -291,7 +292,7 @@ public class EventPublisherWithPersistenceTest {
         ArgumentCaptor.forClass(QuestionnaireLinkedEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
+        eventPublisher.sendEventWithoutPersistance(
             EventType.QUESTIONNAIRE_LINKED,
             Source.RESPONDENT_HOME,
             Channel.RH,
@@ -370,6 +371,6 @@ public class EventPublisherWithPersistenceTest {
 
   @SneakyThrows
   private <T> T loadJson(Class<T[]> clazz) {
-    return FixtureHelper.loadClassFixtures(clazz).get(0);
+    return FixtureHelper.loadPackageFixtures(clazz).get(0);
   }
 }
