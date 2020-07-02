@@ -51,7 +51,7 @@ import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
 import uk.gov.ons.ctp.common.event.persistence.EventPersistence;
 
 @RunWith(MockitoJUnitRunner.class)
-public class EventPublisherTest {
+public class EventPublisherWithoutPersistanceTest {
 
   @InjectMocks private EventPublisher eventPublisher;
   @Mock private RabbitTemplate template;
