@@ -13,7 +13,6 @@ import static org.mockito.Mockito.verify;
 
 import java.util.Date;
 import java.util.UUID;
-import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -369,7 +368,6 @@ public class EventPublisherWithPersistenceTest {
     }
   }
 
-  @SneakyThrows
   private <T> T loadJson(Class<T[]> clazz) {
     return FixtureHelper.loadPackageFixtures(clazz).get(0);
   }

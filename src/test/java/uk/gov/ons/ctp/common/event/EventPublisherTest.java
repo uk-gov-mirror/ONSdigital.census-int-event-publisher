@@ -13,7 +13,6 @@ import static org.mockito.Mockito.verify;
 
 import java.util.Date;
 import java.util.UUID;
-import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -49,6 +48,7 @@ import uk.gov.ons.ctp.common.event.model.RespondentRefusalDetails;
 import uk.gov.ons.ctp.common.event.model.RespondentRefusalEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
+import uk.gov.ons.ctp.common.event.persistence.EventPersistence;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EventPublisherTest {
@@ -56,6 +56,7 @@ public class EventPublisherTest {
   @InjectMocks private EventPublisher eventPublisher;
   @Mock private RabbitTemplate template;
   @Mock private SpringRabbitEventSender sender;
+  @Mock private EventPersistence eventPersistence;
 
   private void assertHeader(
       GenericEvent event,
@@ -301,17 +302,16 @@ public class EventPublisherTest {
     SurveyLaunchedResponse surveyLaunchedResponse = loadJson(SurveyLaunchedResponse[].class);
 
     Mockito.doThrow(new AmqpException("Failed to send")).when(sender).sendEvent(any(), any());
-
+    Mockito.when(eventPersistence.isFirestorePersistenceSupported()).thenReturn(false);
     try {
       eventPublisher.sendEventWithoutPersistance(
           EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveyLaunchedResponse);
       fail();
     } catch (EventPublishException e) {
-      assertTrue(e.getMessage(), e.getMessage().matches("Failed to publish .*"));
+      assertTrue(e.getMessage(), e.getMessage().matches(".* failed to send .*"));
     }
   }
 
-  @SneakyThrows
   private <T> T loadJson(Class<T[]> clazz) {
     return FixtureHelper.loadPackageFixtures(clazz).get(0);
   }

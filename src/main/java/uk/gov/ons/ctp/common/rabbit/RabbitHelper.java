@@ -209,7 +209,8 @@ public class RabbitHelper {
       EventType eventType, Source source, EventPublisher.Channel channel, EventPayload payload)
       throws CTPException {
     try {
-      String transactionId = eventPublisher.sendEventWithoutPersistance(eventType, source, channel, payload);
+      String transactionId =
+          eventPublisher.sendEventWithoutPersistance(eventType, source, channel, payload);
       return transactionId;
 
     } catch (Exception e) {
