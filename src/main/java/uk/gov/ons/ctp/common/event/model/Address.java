@@ -15,5 +15,4 @@ public class Address extends AddressCompact {
   private String estabUprn;
   private String addressType;
   private String addressLevel;
-  private String estabType;
 }
