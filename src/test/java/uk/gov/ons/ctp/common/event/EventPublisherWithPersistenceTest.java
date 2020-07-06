@@ -93,13 +93,12 @@ public class EventPublisherWithPersistenceTest {
     Exception e =
         assertThrows(
             Exception.class,
-            () -> {
-              eventPublisher.sendEvent(
-                  EventType.SURVEY_LAUNCHED,
-                  Source.RESPONDENT_HOME,
-                  Channel.RH,
-                  surveyLaunchedResponse);
-            });
+            () ->
+                eventPublisher.sendEvent(
+                    EventType.SURVEY_LAUNCHED,
+                    Source.RESPONDENT_HOME,
+                    Channel.RH,
+                    surveyLaunchedResponse));
     assertTrue(
         e.getMessage(),
         e.getMessage().matches(".* event persistence failed following Rabbit failure"));
