@@ -209,19 +209,11 @@ public class EventPublisher {
   public String sendEvent(
       EventType eventType, Source source, Channel channel, EventPayload payload) {
 
-    log.with(eventType)
-        .with(source)
-        .with(channel)
-        .with(payload)
-        .debug("Enter sendEventWithPersistance()");
+    log.with(eventType).with(source).with(channel).with(payload).debug("Enter sendEvent()");
 
     String transactionId = doSendEvent(eventType, source, channel, payload);
 
-    log.with(eventType)
-        .with(source)
-        .with(channel)
-        .with(payload)
-        .debug("Exit sendEventWithPersistance()");
+    log.with(eventType).with(source).with(channel).with(payload).debug("Exit sendEvent()");
 
     return transactionId;
   }
