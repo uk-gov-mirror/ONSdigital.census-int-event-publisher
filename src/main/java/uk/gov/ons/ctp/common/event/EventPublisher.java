@@ -160,22 +160,30 @@ public class EventPublisher {
   }
   // @formatter:on
 
-  /**
-   * Constructor taking publishing helper class
-   *
-   * @param eventSender the impl of EventSender that will be used to ... send the event.
-   * @param eventPersistance is an EventPersistence implementation which supports will decide how to
-   *     persist the event details should Rabbit fail.
-   */
   private EventPublisher(EventSender eventSender, EventPersistence eventPersistence) {
     this.sender = eventSender;
     this.eventPersistence = eventPersistence;
   }
 
+  /**
+   * Create method for creating an EventPublisher that will not attempt to persist events following
+   * a Rabbit failure.
+   *
+   * @param eventSender the impl of EventSender that will be used to ... send the event.
+   */
   public static EventPublisher createWithoutEventPersistence(EventSender eventSender) {
     return new EventPublisher(eventSender, null);
   }
 
+  /**
+   * Create method for creating an EventPublisher that will persist events following a Rabbit
+   * failure. If Rabbit fails and the event is successfully persisted then all will appear well to
+   * the caller, with the only indication of the failure being that an error is logged.
+   *
+   * @param eventSender the impl of EventSender that will be used to ... send the event.
+   * @param eventPersistance is an EventPersistence implementation which does the actual event
+   *     persistence.
+   */
   public static EventPublisher createWithEventPersistence(
       EventSender eventSender, EventPersistence eventPersistence) {
     return new EventPublisher(eventSender, eventPersistence);
