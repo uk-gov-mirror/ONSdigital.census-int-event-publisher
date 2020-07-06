@@ -36,11 +36,6 @@ public class FirestoreEventPersistence implements EventPersistence {
   }
 
   @Override
-  public boolean isFirestorePersistenceSupported() {
-    return true;
-  }
-
-  @Override
   public void persistEvent(EventType eventType, RoutingKey routingKey, GenericEvent genericEvent)
       throws CTPException {
     log.with("id", routingKey.getKey()).debug("Storing event data in Firestore");

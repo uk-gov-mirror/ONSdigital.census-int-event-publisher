@@ -1,11 +1,11 @@
 package uk.gov.ons.ctp.common.event;
 
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import lombok.Getter;
 import uk.gov.ons.ctp.common.event.model.AddressModification;
 import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
@@ -167,47 +167,27 @@ public class EventPublisher {
    * @param eventPersistance is an EventPersistence implementation which supports will decide how to
    *     persist the event details should Rabbit fail.
    */
-  public EventPublisher(EventSender eventSender, EventPersistence eventPersistence) {
+  private EventPublisher(EventSender eventSender, EventPersistence eventPersistence) {
     this.sender = eventSender;
     this.eventPersistence = eventPersistence;
   }
 
-  /**
-   * Method to publish an event. If the event cannot be sent then no attempt is made to persist the
-   * event data and an exception is thrown.
-   *
-   * @param eventType the event type
-   * @param source the source
-   * @param channel the channel
-   * @param payload message payload for event
-   * @return String UUID transaction Id for event
-   */
-  public String sendEventWithoutPersistance(
-      EventType eventType, Source source, Channel channel, EventPayload payload) {
-
-    log.with(eventType)
-        .with(source)
-        .with(channel)
-        .with(payload)
-        .debug("Enter sendEventWithoutPersistance()");
-
-    String transactionId = doSendEvent(eventType, source, channel, payload);
-
-    log.with(eventType)
-        .with(source)
-        .with(channel)
-        .with(payload)
-        .debug("Exit sendEventWithoutPersistance()");
-
-    return transactionId;
+  public static EventPublisher createWithoutEventPersistence(EventSender eventSender) {
+    return new EventPublisher(eventSender, null);
   }
-
+  
+  public static EventPublisher createWithEventPersistence(EventSender eventSender, EventPersistence eventPersistence) {
+    return new EventPublisher(eventSender, eventPersistence);
+  }
+  
   /**
-   * This method publishes events as per sendEvent(), except that in the event of a Rabbit failure
-   * it persists the message in Firestore and no exception is thrown.
+   * Method to publish an event.
    *
-   * <p>If Rabbit fails to send the message and we also fail to persist the message in Firestore
-   * then an EventPublishException is thrown.
+   * If no EventPersister has been set then a Rabbit failure results in an exception being thrown.
+   * 
+   * If an EventPersister is set then in the event of a Rabbit failure it will attempt to save the event into a persistent store.
+   * If event is persisted then this method returns as normal with no exception.
+   * If event persistence fails then an error is logged and an exception is thrown.
    *
    * @param eventType the event type
    * @param source the source
@@ -215,7 +195,7 @@ public class EventPublisher {
    * @param payload message payload for event
    * @return String UUID transaction Id for event
    */
-  public String sendEventWithPersistance(
+  public String sendEvent(
       EventType eventType, Source source, Channel channel, EventPayload payload) {
 
     log.with(eventType)
@@ -224,11 +204,6 @@ public class EventPublisher {
         .with(payload)
         .debug("Enter sendEventWithPersistance()");
 
-    // Fail now if the application wants to use Firestore persistence in the event of failure, but
-    // is not configured for it
-    if (!eventPersistence.isFirestorePersistenceSupported()) {
-      throw new EventPublishException("Application is not configured for Firestore persistence");
-    }
 
     String transactionId = doSendEvent(eventType, source, channel, payload);
 
@@ -379,24 +354,24 @@ public class EventPublisher {
           .with("exception", e)
           .error("Failed to send event");
 
-      if (!eventPersistence.isFirestorePersistenceSupported()) {
+      if (eventPersistence == null) {
         throw new EventPublishException("Rabbit failed to send event", e);
       }
 
-      // Save event to Firestore
+      // Save event to persistent store
       try {
         eventPersistence.persistEvent(eventType, routingKey, genericEvent);
         log.with("eventType", eventType)
             .with("routingKey", routingKey)
-            .info("Event data saved to Firestore");
+            .info("Event data saved to persistent store");
       } catch (Exception epe) {
-        // There is no hope. Neither Rabbit or Firestore are working
+        // There is no hope. Neither Rabbit or Persistence are working
         log.with("eventType", eventType)
             .with("routingKey", routingKey)
             .with("exception", epe)
-            .error("Failed to persist event data in Firestore following Rabbit failure");
+            .error("Backup event persistence failed following Rabbit failure");
         throw new EventPublishException(
-            "Failed to persist event data in Firestore following Rabbit failure", epe);
+            "Backup event persistence failed following Rabbit failure", e);
       }
     }
 

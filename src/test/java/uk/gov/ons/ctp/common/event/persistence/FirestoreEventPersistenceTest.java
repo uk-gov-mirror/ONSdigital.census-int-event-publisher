@@ -28,13 +28,6 @@ public class FirestoreEventPersistenceTest {
   @Mock RetryableCloudDataStore cloudDataStore;
 
   @Test
-  public void testPersistenceSupported() {
-    EventPersistence persistence = new FirestoreEventPersistence();
-
-    assertTrue(persistence.isFirestorePersistenceSupported());
-  }
-
-  @Test
   public void testPersistEvent() throws Exception {
     long startTime = System.currentTimeMillis();
 

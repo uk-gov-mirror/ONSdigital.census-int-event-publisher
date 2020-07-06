@@ -1,5 +1,7 @@
 package uk.gov.ons.ctp.common.rabbit;
 
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
@@ -8,8 +10,6 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.GetResponse;
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 import uk.gov.ons.ctp.common.config.YmlConfigReader;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.CTPException.Fault;
@@ -20,7 +20,6 @@ import uk.gov.ons.ctp.common.event.EventPublisher.Source;
 import uk.gov.ons.ctp.common.event.NativeRabbitEventSender;
 import uk.gov.ons.ctp.common.event.RabbitConnectionDetails;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
-import uk.gov.ons.ctp.common.event.persistence.VoidEventPersistence;
 
 /**
  * This is a test support class for interacting with RabbitMQ.
@@ -65,8 +64,7 @@ public class RabbitHelper {
     }
 
     NativeRabbitEventSender sender = new NativeRabbitEventSender(this.rabbit, exchange);
-    VoidEventPersistence eventPersistence = new VoidEventPersistence();
-    eventPublisher = new EventPublisher(sender, eventPersistence);
+    eventPublisher = EventPublisher.createWithoutEventPersistence(sender);
 
     this.exchange = exchange;
   }
@@ -210,7 +208,7 @@ public class RabbitHelper {
       throws CTPException {
     try {
       String transactionId =
-          eventPublisher.sendEventWithoutPersistance(eventType, source, channel, payload);
+          eventPublisher.sendEvent(eventType, source, channel, payload);
       return transactionId;
 
     } catch (Exception e) {
