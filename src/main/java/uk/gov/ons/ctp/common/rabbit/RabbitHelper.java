@@ -263,6 +263,7 @@ public class RabbitHelper {
    * Reads a message from the named queue and convert it to a Java object. This method will wait for
    * up to the specified number of milliseconds for a message to appear on the queue.
    *
+   * @param <T> is the class of object we are expected to recieve.
    * @param queueName is the name of the queue to read from.
    * @param clazz is the class that the message should be converted to.
    * @param maxWaitTimeMillis is the maximum amount of time the caller is prepared to wait for the

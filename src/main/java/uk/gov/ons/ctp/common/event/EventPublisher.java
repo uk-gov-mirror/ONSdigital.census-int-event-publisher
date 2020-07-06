@@ -170,6 +170,7 @@ public class EventPublisher {
    * a Rabbit failure.
    *
    * @param eventSender the impl of EventSender that will be used to ... send the event.
+   * @return an EventPubisher object.
    */
   public static EventPublisher createWithoutEventPersistence(EventSender eventSender) {
     return new EventPublisher(eventSender, null);
@@ -181,8 +182,9 @@ public class EventPublisher {
    * the caller, with the only indication of the failure being that an error is logged.
    *
    * @param eventSender the impl of EventSender that will be used to ... send the event.
-   * @param eventPersistance is an EventPersistence implementation which does the actual event
+   * @param eventPersistence is an EventPersistence implementation which does the actual event
    *     persistence.
+   * @return an EventPubisher object.
    */
   public static EventPublisher createWithEventPersistence(
       EventSender eventSender, EventPersistence eventPersistence) {
