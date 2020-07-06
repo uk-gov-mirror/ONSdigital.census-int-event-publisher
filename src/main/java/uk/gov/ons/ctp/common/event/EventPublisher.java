@@ -1,11 +1,11 @@
 package uk.gov.ons.ctp.common.event;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
 import lombok.Getter;
 import uk.gov.ons.ctp.common.event.model.AddressModification;
 import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
@@ -175,19 +175,22 @@ public class EventPublisher {
   public static EventPublisher createWithoutEventPersistence(EventSender eventSender) {
     return new EventPublisher(eventSender, null);
   }
-  
-  public static EventPublisher createWithEventPersistence(EventSender eventSender, EventPersistence eventPersistence) {
+
+  public static EventPublisher createWithEventPersistence(
+      EventSender eventSender, EventPersistence eventPersistence) {
     return new EventPublisher(eventSender, eventPersistence);
   }
-  
+
   /**
    * Method to publish an event.
    *
-   * If no EventPersister has been set then a Rabbit failure results in an exception being thrown.
-   * 
-   * If an EventPersister is set then in the event of a Rabbit failure it will attempt to save the event into a persistent store.
-   * If event is persisted then this method returns as normal with no exception.
-   * If event persistence fails then an error is logged and an exception is thrown.
+   * <p>If no EventPersister has been set then a Rabbit failure results in an exception being
+   * thrown.
+   *
+   * <p>If an EventPersister is set then in the event of a Rabbit failure it will attempt to save
+   * the event into a persistent store. If event is persisted then this method returns as normal
+   * with no exception. If event persistence fails then an error is logged and an exception is
+   * thrown.
    *
    * @param eventType the event type
    * @param source the source
@@ -203,7 +206,6 @@ public class EventPublisher {
         .with(channel)
         .with(payload)
         .debug("Enter sendEventWithPersistance()");
-
 
     String transactionId = doSendEvent(eventType, source, channel, payload);
 

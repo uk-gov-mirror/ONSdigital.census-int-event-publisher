@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+
 import java.util.Date;
 import java.util.UUID;
 import org.junit.Test;
@@ -230,8 +231,7 @@ public class EventPublisherTest {
     ArgumentCaptor<CaseEvent> eventCapture = ArgumentCaptor.forClass(CaseEvent.class);
 
     String transactionId =
-        eventPublisher.sendEvent(
-            type, Source.CONTACT_CENTRE_API, Channel.CC, payload);
+        eventPublisher.sendEvent(type, Source.CONTACT_CENTRE_API, Channel.CC, payload);
 
     RoutingKey routingKey = RoutingKey.forType(type);
     verify(sender).sendEvent(eq(routingKey), eventCapture.capture());

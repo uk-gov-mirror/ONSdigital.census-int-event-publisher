@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+
 import java.util.Date;
 import java.util.UUID;
 import org.junit.Test;
@@ -32,7 +33,7 @@ import uk.gov.ons.ctp.common.event.model.SurveyLaunchedEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
 import uk.gov.ons.ctp.common.event.persistence.FirestoreEventPersistence;
 
-/** 
+/**
  * EventPublisher tests specific to failure scenarios when running with event persistence enabled.
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -73,10 +74,7 @@ public class EventPublisherWithPersistenceTest {
     // Verify that the event was persistent following simulated Rabbit failure
     RoutingKey routingKey = RoutingKey.forType(EventType.RESPONDENT_AUTHENTICATED);
     verify(eventPersistence, times(1))
-        .persistEvent(
-            eq(EventType.SURVEY_LAUNCHED),
-            eq(routingKey),
-            eventCapture.capture());
+        .persistEvent(eq(EventType.SURVEY_LAUNCHED), eq(routingKey), eventCapture.capture());
     SurveyLaunchedEvent event = eventCapture.getValue();
     assertHeader(
         event, transactionId, EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH);
@@ -92,9 +90,16 @@ public class EventPublisherWithPersistenceTest {
         .when(eventPersistence)
         .persistEvent(any(), any(), any());
 
-    Exception e = assertThrows(Exception.class, () -> {      eventPublisher.sendEvent(
-        EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveyLaunchedResponse);
-    });
+    Exception e =
+        assertThrows(
+            Exception.class,
+            () -> {
+              eventPublisher.sendEvent(
+                  EventType.SURVEY_LAUNCHED,
+                  Source.RESPONDENT_HOME,
+                  Channel.RH,
+                  surveyLaunchedResponse);
+            });
     assertTrue(
         e.getMessage(),
         e.getMessage().matches(".* event persistence failed following Rabbit failure"));

@@ -1,7 +1,5 @@
 package uk.gov.ons.ctp.common.rabbit;
 
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
@@ -10,6 +8,8 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.GetResponse;
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 import uk.gov.ons.ctp.common.config.YmlConfigReader;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.CTPException.Fault;
@@ -207,8 +207,7 @@ public class RabbitHelper {
       EventType eventType, Source source, EventPublisher.Channel channel, EventPayload payload)
       throws CTPException {
     try {
-      String transactionId =
-          eventPublisher.sendEvent(eventType, source, channel, payload);
+      String transactionId = eventPublisher.sendEvent(eventType, source, channel, payload);
       return transactionId;
 
     } catch (Exception e) {

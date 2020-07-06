@@ -3,6 +3,7 @@ package uk.gov.ons.ctp.common.event;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -18,10 +19,7 @@ import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
 import uk.gov.ons.ctp.common.event.EventPublisher.Source;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
 
-
-/** 
- * EventPublisher tests specific to the scenario in which event persistence is turned off.
- */
+/** EventPublisher tests specific to the scenario in which event persistence is turned off. */
 @RunWith(MockitoJUnitRunner.class)
 public class EventPublisherWithoutPersistanceTest {
 
@@ -35,10 +33,16 @@ public class EventPublisherWithoutPersistanceTest {
 
     Mockito.doThrow(new AmqpException("Failed to send")).when(sender).sendEvent(any(), any());
 
-    Exception e = assertThrows(Exception.class, () -> {
-      eventPublisher.sendEvent(
-          EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveyLaunchedResponse);
-    });  
+    Exception e =
+        assertThrows(
+            Exception.class,
+            () -> {
+              eventPublisher.sendEvent(
+                  EventType.SURVEY_LAUNCHED,
+                  Source.RESPONDENT_HOME,
+                  Channel.RH,
+                  surveyLaunchedResponse);
+            });
     assertTrue(e.getMessage(), e.getMessage().matches(".* failed to send .*"));
   }
 
