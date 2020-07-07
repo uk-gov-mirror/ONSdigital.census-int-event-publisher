@@ -11,7 +11,6 @@ import static org.mockito.Mockito.verify;
 
 import java.util.Date;
 import java.util.UUID;
-import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -47,6 +46,7 @@ import uk.gov.ons.ctp.common.event.model.RespondentRefusalDetails;
 import uk.gov.ons.ctp.common.event.model.RespondentRefusalEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
+import uk.gov.ons.ctp.common.event.persistence.FirestoreEventPersistence;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EventPublisherTest {
@@ -54,6 +54,7 @@ public class EventPublisherTest {
   @InjectMocks private EventPublisher eventPublisher;
   @Mock private RabbitTemplate template;
   @Mock private SpringRabbitEventSender sender;
+  @Mock private FirestoreEventPersistence eventPersistence;
 
   private void assertHeader(
       GenericEvent event,
@@ -316,8 +317,7 @@ public class EventPublisherTest {
     assertEquals(questionnaireLinked, event.getPayload().getUac());
   }
 
-  @SneakyThrows
   private <T> T loadJson(Class<T[]> clazz) {
-    return FixtureHelper.loadClassFixtures(clazz).get(0);
+    return FixtureHelper.loadPackageFixtures(clazz).get(0);
   }
 }

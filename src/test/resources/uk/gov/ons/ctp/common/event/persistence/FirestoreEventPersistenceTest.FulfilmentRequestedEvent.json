@@ -1,0 +1,37 @@
+{
+  "event": {
+    "type": "FULFILMENT_REQUESTED",
+    "source": "CONTACT_CENTRE_API",
+    "channel": "CC",
+    "dateTime": "2020-06-29T13:25:36.042Z",
+    "transactionId": "1d91fec8-4f3a-4ce0-ad4f-165815bd5ec4"
+  },
+  "payload": {
+    "fulfilmentRequest": {
+      "fulfilmentCode": "ENH1",
+      "caseId": "id-123",
+      "individualCaseId": "ead8aa0e-793f-4489-ae26-1989e0bd76b1",
+      "address": {
+        "addressLine1": "1 main street",
+        "addressLine2": "upper upperingham",
+        "addressLine3": "Lower Upton",
+        "townName": "Upton",
+        "postcode": "UP103UP",
+        "region": "E",
+        "uprn": "10013041069",
+        "latitude": null,
+        "longitude": null,
+        "estabUprn": null,
+        "addressType": null,
+        "addressLevel": null,
+        "estabType": null
+      },
+      "contact": {
+        "title": "Ms",
+        "forename": "jo",
+        "surname": "smith",
+        "telNo": "+447890000000"
+      }
+    }
+  }
+}

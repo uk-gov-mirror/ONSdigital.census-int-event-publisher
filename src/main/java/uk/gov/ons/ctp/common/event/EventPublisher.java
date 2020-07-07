@@ -44,6 +44,7 @@ import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
 import uk.gov.ons.ctp.common.event.model.UAC;
 import uk.gov.ons.ctp.common.event.model.UACEvent;
 import uk.gov.ons.ctp.common.event.model.UACPayload;
+import uk.gov.ons.ctp.common.event.persistence.EventPersistence;
 
 /** Service responsible for the publication of events. */
 public class EventPublisher {
@@ -51,6 +52,8 @@ public class EventPublisher {
   private static final Logger log = LoggerFactory.getLogger(EventPublisher.class);
 
   private EventSender sender;
+
+  private EventPersistence eventPersistence;
 
   @Getter
   public enum RoutingKey {
@@ -160,17 +163,47 @@ public class EventPublisher {
   }
   // @formatter:on
 
-  /**
-   * Constructor taking publishing helper class
-   *
-   * @param eventSender the impl of EventSender that will be used to ... send the event
-   */
-  public EventPublisher(EventSender eventSender) {
+  private EventPublisher(EventSender eventSender, EventPersistence eventPersistence) {
     this.sender = eventSender;
+    this.eventPersistence = eventPersistence;
   }
 
   /**
-   * Method to publish an event
+   * Create method for creating an EventPublisher that will not attempt to persist events following
+   * a Rabbit failure.
+   *
+   * @param eventSender the impl of EventSender that will be used to ... send the event.
+   * @return an EventPubisher object.
+   */
+  public static EventPublisher createWithoutEventPersistence(EventSender eventSender) {
+    return new EventPublisher(eventSender, null);
+  }
+
+  /**
+   * Create method for creating an EventPublisher that will persist events following a Rabbit
+   * failure. If Rabbit fails and the event is successfully persisted then all will appear well to
+   * the caller, with the only indication of the failure being that an error is logged.
+   *
+   * @param eventSender the impl of EventSender that will be used to ... send the event.
+   * @param eventPersistence is an EventPersistence implementation which does the actual event
+   *     persistence.
+   * @return an EventPubisher object.
+   */
+  public static EventPublisher createWithEventPersistence(
+      EventSender eventSender, EventPersistence eventPersistence) {
+    return new EventPublisher(eventSender, eventPersistence);
+  }
+
+  /**
+   * Method to publish an event.
+   *
+   * <p>If no EventPersister has been set then a Rabbit failure results in an exception being
+   * thrown.
+   *
+   * <p>If an EventPersister is set then in the event of a Rabbit failure it will attempt to save
+   * the event into a persistent store. If event is persisted then this method returns as normal
+   * with no exception. If event persistence fails then an error is logged and an exception is
+   * thrown.
    *
    * @param eventType the event type
    * @param source the source
@@ -181,7 +214,17 @@ public class EventPublisher {
   public String sendEvent(
       EventType eventType, Source source, Channel channel, EventPayload payload) {
 
-    log.with(eventType).with(source).with(channel).with(payload).debug("sendEvent()");
+    log.with(eventType).with(source).with(channel).with(payload).debug("Enter sendEvent()");
+
+    String transactionId = doSendEvent(eventType, source, channel, payload);
+
+    log.with(eventType).with(source).with(channel).with(payload).debug("Exit sendEvent()");
+
+    return transactionId;
+  }
+
+  private String doSendEvent(
+      EventType eventType, Source source, Channel channel, EventPayload payload) {
 
     if (!payload.getClass().equals(eventType.getPayloadType())) {
       log.with("payloadType", payload.getClass())
@@ -315,6 +358,7 @@ public class EventPublisher {
             payload.getClass().getName() + " for EventType '" + eventType + "' not supported yet";
         throw new UnsupportedOperationException(errorMessage);
     }
+
     try {
       log.with("eventType", eventType).with("routingKey", routingKey).debug("Sending message");
       sender.sendEvent(routingKey, genericEvent);
@@ -325,8 +369,28 @@ public class EventPublisher {
           .with("routingKey", routingKey)
           .with("exception", e)
           .error("Failed to send event");
-      throw new EventPublishException(e);
+
+      if (eventPersistence == null) {
+        throw new EventPublishException("Rabbit failed to send event", e);
+      }
+
+      // Save event to persistent store
+      try {
+        eventPersistence.persistEvent(eventType, routingKey, genericEvent);
+        log.with("eventType", eventType)
+            .with("routingKey", routingKey)
+            .info("Event data saved to persistent store");
+      } catch (Exception epe) {
+        // There is no hope. Neither Rabbit or Persistence are working
+        log.with("eventType", eventType)
+            .with("routingKey", routingKey)
+            .with("exception", epe)
+            .error("Backup event persistence failed following Rabbit failure");
+        throw new EventPublishException(
+            "Backup event persistence failed following Rabbit failure", e);
+      }
     }
+
     return genericEvent.getEvent().getTransactionId();
   }
 
