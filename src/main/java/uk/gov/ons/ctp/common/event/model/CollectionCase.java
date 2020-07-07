@@ -22,6 +22,7 @@ public class CollectionCase implements EventPayload {
   private String actionableFrom;
   private boolean handDelivery;
   private boolean addressInvalid;
+  private Integer ceExpectedCapacity;
 
   @JsonSerialize(using = CustomDateSerialiser.class)
   private Date createdDateTime;

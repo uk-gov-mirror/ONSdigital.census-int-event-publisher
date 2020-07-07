@@ -29,6 +29,8 @@ import uk.gov.ons.ctp.common.event.model.AddressModification;
 import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
 import uk.gov.ons.ctp.common.event.model.AddressNotValid;
 import uk.gov.ons.ctp.common.event.model.AddressNotValidEvent;
+import uk.gov.ons.ctp.common.event.model.AddressTypeChanged;
+import uk.gov.ons.ctp.common.event.model.AddressTypeChangedEvent;
 import uk.gov.ons.ctp.common.event.model.CaseEvent;
 import uk.gov.ons.ctp.common.event.model.CollectionCase;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
@@ -252,7 +254,25 @@ public class EventPublisherTest {
 
   @Test
   public void shouldSendAddressTypeChanged() {
-    assertSendCase(EventType.ADDRESS_TYPE_CHANGED);
+    AddressTypeChanged payload = loadJson(AddressTypeChanged[].class);
+    ArgumentCaptor<AddressTypeChangedEvent> eventCapture =
+        ArgumentCaptor.forClass(AddressTypeChangedEvent.class);
+
+    String transactionId =
+        eventPublisher.sendEvent(
+            EventType.ADDRESS_TYPE_CHANGED, Source.CONTACT_CENTRE_API, Channel.CC, payload);
+
+    RoutingKey routingKey = RoutingKey.forType(EventType.ADDRESS_TYPE_CHANGED);
+    verify(sender, times(1)).sendEvent(eq(routingKey), eventCapture.capture());
+    AddressTypeChangedEvent event = eventCapture.getValue();
+
+    assertHeader(
+        event,
+        transactionId,
+        EventType.ADDRESS_TYPE_CHANGED,
+        Source.CONTACT_CENTRE_API,
+        Channel.CC);
+    assertEquals(payload, event.getPayload().getAddressTypeChange());
   }
 
   /** Test event message with FeedbackResponse payload */
