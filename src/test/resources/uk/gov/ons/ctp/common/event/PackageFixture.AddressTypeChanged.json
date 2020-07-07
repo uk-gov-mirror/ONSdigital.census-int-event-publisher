@@ -19,7 +19,8 @@
       "estabUprn": null,
       "addressType": "CE",
       "addressLevel": "E",
-      "estabType": "XXX"
+      "estabType": "XXX",
+      "organisationName": "Cyberdyne Systems"
     },
     "contact": {
       "title": "Ms",
