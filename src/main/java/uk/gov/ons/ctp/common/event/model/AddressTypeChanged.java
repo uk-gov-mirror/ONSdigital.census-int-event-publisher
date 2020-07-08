@@ -7,15 +7,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CollectionCaseCompact {
-  private UUID id;
-  private String caseType;
-  private Integer ceExpectedCapacity;
-
-  public CollectionCaseCompact(UUID id) {
-    this.id = id;
-  }
+@Builder
+public class AddressTypeChanged implements EventPayload {
+  private UUID newCaseId;
+  private CollectionCase collectionCase;
 }

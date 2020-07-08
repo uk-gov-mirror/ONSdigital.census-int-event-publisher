@@ -13,6 +13,9 @@ import uk.gov.ons.ctp.common.event.model.AddressModifiedPayload;
 import uk.gov.ons.ctp.common.event.model.AddressNotValid;
 import uk.gov.ons.ctp.common.event.model.AddressNotValidEvent;
 import uk.gov.ons.ctp.common.event.model.AddressNotValidPayload;
+import uk.gov.ons.ctp.common.event.model.AddressTypeChanged;
+import uk.gov.ons.ctp.common.event.model.AddressTypeChangedEvent;
+import uk.gov.ons.ctp.common.event.model.AddressTypeChangedPayload;
 import uk.gov.ons.ctp.common.event.model.CaseEvent;
 import uk.gov.ons.ctp.common.event.model.CasePayload;
 import uk.gov.ons.ctp.common.event.model.CollectionCase;
@@ -102,7 +105,7 @@ public class EventPublisher {
   public enum EventType {
     ADDRESS_MODIFIED(AddressModification.class),
     ADDRESS_NOT_VALID(AddressNotValid.class),
-    ADDRESS_TYPE_CHANGED,
+    ADDRESS_TYPE_CHANGED(AddressTypeChanged.class),
     APPOINTMENT_REQUESTED,
     CASE_CREATED(CollectionCase.class),
     CASE_UPDATED(CollectionCase.class),
@@ -313,6 +316,15 @@ public class EventPublisher {
             new AddressNotValidPayload((AddressNotValid) payload);
         addrNotValidEvent.setPayload(addrNotValidPayload);
         genericEvent = addrNotValidEvent;
+        break;
+
+      case ADDRESS_TYPE_CHANGED:
+        AddressTypeChangedEvent addressTypeChangedEvent = new AddressTypeChangedEvent();
+        addressTypeChangedEvent.setEvent(buildHeader(eventType, source, channel));
+        AddressTypeChangedPayload addressTypeChangedPayload =
+            new AddressTypeChangedPayload((AddressTypeChanged) payload);
+        addressTypeChangedEvent.setPayload(addressTypeChangedPayload);
+        genericEvent = addressTypeChangedEvent;
         break;
 
       case NEW_ADDRESS_REPORTED:

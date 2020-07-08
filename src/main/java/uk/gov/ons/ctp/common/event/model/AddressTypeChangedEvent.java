@@ -9,10 +9,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Address extends AddressCompact {
-  private String latitude;
-  private String longitude;
-  private String estabUprn;
-  private String addressType;
-  private String addressLevel;
+public class AddressTypeChangedEvent extends GenericEvent {
+
+  private AddressTypeChangedPayload payload = new AddressTypeChangedPayload();
 }
