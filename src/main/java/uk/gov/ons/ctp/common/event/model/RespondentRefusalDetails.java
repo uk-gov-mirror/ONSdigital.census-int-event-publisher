@@ -27,8 +27,8 @@ public class RespondentRefusalDetails implements EventPayload {
 
   // The explicit get and set methods workaround a problem caused by the interaction of Lombok and
   // Jackson.
-  // By default lombok creates an isHouseholder() method, but then Jackson serialises this without
-  // the 'is' part.
+  // By default lombok creates an isHouseholder() method, but then Jackson serialises this as
+  // simply 'householder'.
   // BTW, a JsonProperty annotation still leaves the isHouseholder() method visible, so the
   // generated Json contains a 'isHouseholder' and a 'householder' field.
   @JsonProperty(value = "isHouseholder")
