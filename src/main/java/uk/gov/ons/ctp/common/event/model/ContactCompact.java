@@ -4,15 +4,19 @@ import com.godaddy.logging.LoggingScope;
 import com.godaddy.logging.Scope;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Contact extends ContactCompact {
+public class ContactCompact {
 
   @LoggingScope(scope = Scope.SKIP)
-  private String telNo;
+  private String title;
+
+  @LoggingScope(scope = Scope.SKIP)
+  private String forename;
+
+  @LoggingScope(scope = Scope.SKIP)
+  private String surname;
 }
