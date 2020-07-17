@@ -12,6 +12,5 @@ public class FulfilmentRequest implements EventPayload {
   private String fulfilmentCode;
   private String caseId;
   private String individualCaseId;
-  private Address address;
   private Contact contact;
 }
