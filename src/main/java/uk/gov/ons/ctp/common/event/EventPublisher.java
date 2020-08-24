@@ -376,7 +376,7 @@ public class EventPublisher {
 
       // Save event to persistent store
       try {
-        eventPersistence.persistEvent(eventType, routingKey, genericEvent);
+        eventPersistence.persistEvent(eventType, genericEvent);
         log.with("eventType", eventType)
             .with("routingKey", routingKey)
             .info("Event data saved to persistent store");
