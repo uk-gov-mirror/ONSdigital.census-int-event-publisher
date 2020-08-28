@@ -364,10 +364,12 @@ public class EventPublisher {
       sender.sendEvent(routingKey, genericEvent);
       log.with("eventType", eventType).with("routingKey", routingKey).debug("Have sent message");
     } catch (Exception e) {
-      // diff sender impls may send diff exceptions
-      log.with("eventType", eventType).with("routingKey", routingKey).error("Failed to send event");
+      boolean backup = eventPersistence != null;
+      log.with("eventType", eventType)
+          .with("routingKey", routingKey)
+          .error("Failed to send event {}", backup ? ", but will now backup to firestore" : "");
 
-      if (eventPersistence == null) {
+      if (!backup) {
         throw new EventPublishException("Rabbit failed to send event", e);
       }
 
