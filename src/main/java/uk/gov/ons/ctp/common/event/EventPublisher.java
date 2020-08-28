@@ -365,10 +365,7 @@ public class EventPublisher {
       log.with("eventType", eventType).with("routingKey", routingKey).debug("Have sent message");
     } catch (Exception e) {
       // diff sender impls may send diff exceptions
-      log.with("eventType", eventType)
-          .with("routingKey", routingKey)
-          .with("exception", e)
-          .error("Failed to send event");
+      log.with("eventType", eventType).with("routingKey", routingKey).error("Failed to send event");
 
       if (eventPersistence == null) {
         throw new EventPublishException("Rabbit failed to send event", e);
