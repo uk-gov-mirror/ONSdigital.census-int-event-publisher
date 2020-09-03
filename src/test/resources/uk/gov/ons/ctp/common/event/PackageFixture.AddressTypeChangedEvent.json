@@ -1,0 +1,26 @@
+[
+  {
+    "event": {
+      "type": "ADDRESS_TYPE_CHANGED",
+      "source": "RESPONDENT_HOME",
+      "channel": "RH",
+      "dateTime": "2020-06-29T13:25:36.042Z",
+      "transactionId": "ae9bf8a4-5de4-4dc2-b616-4f7fb15025bd"
+    },
+    "payload": {
+      "addressTypeChange": {
+        "newCaseId": "18353ceb-28cf-4a64-bee2-c4dc556d1268",
+        "collectionCase": {
+          "id": "dc4477d1-dd3f-4c69-b181-7ff725dc9fa4",
+          "ceExpectedCapacity": 34,
+          "address": {
+            "addressType": "CE",
+            "estabType": "HOSTEL",
+            "organisationName": "Cyberdyne Systems"
+          }
+        }
+      }
+    }
+  }
+]
+

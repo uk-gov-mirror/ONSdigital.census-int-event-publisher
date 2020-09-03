@@ -1,0 +1,21 @@
+[
+  {
+    "event": {
+      "type": "ADDRESS_NOT_VALID",
+      "source": "RESPONDENT_HOME",
+      "channel": "RH",
+      "dateTime": "2020-06-29T13:25:36.042Z",
+      "transactionId": "e397a32c-1261-4c78-8f25-e38f4b83885f"
+    },
+    "payload": {
+      "invalidAddress": {
+        "collectionCase": {
+          "id": "18353ceb-28cf-4a64-bee2-c4dc556d1268"
+        },
+        "reason": "DERELICT",
+        "notes": "buy weetabix"
+      }
+    }
+  }
+]
+
