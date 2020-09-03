@@ -50,8 +50,8 @@ import uk.gov.ons.ctp.common.event.model.UACPayload;
 import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
 
 /**
- * Build objects for the ready for the publisher to send events. The subclasses of the event builder
- * handle the inconsistent structure of each event object.
+ * Build objects ready for the publisher to send events. The subclasses of the event builder handle
+ * the inconsistent structure of each event object.
  */
 public abstract class EventBuilder {
   public static final EventBuilder NONE = new NullEventBuilder();
