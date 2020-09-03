@@ -209,16 +209,18 @@ public class EventPublisher {
    * Send a backup event that would have previously been stored in cloud data storage.
    *
    * @param event backup event , typically recovered from firestore.
+   * @return String UUID transaction Id for event
    */
-  public void send(EventBackupData event) {
+  public String sendEvent(EventBackupData event) {
     EventType type = event.getEventType();
     SendInfo sendInfo = type.getBuilder().create(event.getEvent());
     if (sendInfo == null) {
       log.error("Unrecognised event type {}", type);
-      throw new RuntimeException("Unknown event: " + type);
+      throw new UnsupportedOperationException("Unknown event: " + type);
     }
     String transactionId = doSendEvent(type, sendInfo);
     log.debug("Sent {} with transactionId {}", event.getEventType(), transactionId);
+    return transactionId;
   }
 
   private String doSendEvent(EventType eventType, SendInfo sendInfo) {
@@ -246,7 +248,7 @@ public class EventPublisher {
 
     GenericEvent genericEvent = eventType.getBuilder().create(sendInfo);
     if (genericEvent == null) {
-      log.with("eventType", eventType).error("Routing key for eventType not configured");
+      log.with("eventType", eventType).error("Payload for eventType not configured");
       String errorMessage =
           payload.getClass().getName() + " for EventType '" + eventType + "' not supported yet";
       throw new UnsupportedOperationException(errorMessage);
