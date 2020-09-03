@@ -47,6 +47,7 @@ import uk.gov.ons.ctp.common.event.model.FulfilmentRequest;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequestedEvent;
 import uk.gov.ons.ctp.common.event.model.GenericEvent;
 import uk.gov.ons.ctp.common.event.model.Header;
+import uk.gov.ons.ctp.common.event.model.NewAddress;
 import uk.gov.ons.ctp.common.event.model.NewAddressReportedEvent;
 import uk.gov.ons.ctp.common.event.model.QuestionnaireLinkedDetails;
 import uk.gov.ons.ctp.common.event.model.QuestionnaireLinkedEvent;
@@ -56,6 +57,7 @@ import uk.gov.ons.ctp.common.event.model.RespondentRefusalDetails;
 import uk.gov.ons.ctp.common.event.model.RespondentRefusalEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
+import uk.gov.ons.ctp.common.event.model.UAC;
 import uk.gov.ons.ctp.common.event.model.UACEvent;
 import uk.gov.ons.ctp.common.event.persistence.EventBackupData;
 import uk.gov.ons.ctp.common.event.persistence.FirestoreEventPersistence;
@@ -113,7 +115,7 @@ public class EventPublisherTest {
         eventPublisher.sendEvent(
             EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveyLaunchedResponse);
 
-    RoutingKey routingKey = RoutingKey.forType(EventType.RESPONDENT_AUTHENTICATED);
+    RoutingKey routingKey = RoutingKey.forType(EventType.SURVEY_LAUNCHED);
     verify(sender, times(1)).sendEvent(eq(routingKey), surveyLaunchedEventCaptor.capture());
     SurveyLaunchedEvent event = surveyLaunchedEventCaptor.getValue();
     assertHeader(
@@ -326,6 +328,51 @@ public class EventPublisherTest {
     assertEquals(questionnaireLinked, event.getPayload().getUac());
   }
 
+  @Test
+  public void shouldSendNewAddressReported() {
+    NewAddress payload = loadJson(NewAddress[].class);
+
+    String transactionId =
+        eventPublisher.sendEvent(
+            EventType.NEW_ADDRESS_REPORTED, Source.CONTACT_CENTRE_API, Channel.CC, payload);
+
+    RoutingKey routingKey = RoutingKey.forType(EventType.NEW_ADDRESS_REPORTED);
+    verify(sender, times(1)).sendEvent(eq(routingKey), newAddressReportedEventCaptor.capture());
+    NewAddressReportedEvent event = newAddressReportedEventCaptor.getValue();
+
+    assertHeader(
+        event,
+        transactionId,
+        EventType.NEW_ADDRESS_REPORTED,
+        Source.CONTACT_CENTRE_API,
+        Channel.CC);
+    assertEquals(payload, event.getPayload().getNewAddress());
+  }
+
+  private void assertSendUac(EventType type) {
+    UAC payload = loadJson(UAC[].class);
+
+    String transactionId =
+        eventPublisher.sendEvent(type, Source.CONTACT_CENTRE_API, Channel.CC, payload);
+
+    RoutingKey routingKey = RoutingKey.forType(type);
+    verify(sender).sendEvent(eq(routingKey), uacEventCaptor.capture());
+    UACEvent event = uacEventCaptor.getValue();
+
+    assertHeader(event, transactionId, type, Source.CONTACT_CENTRE_API, Channel.CC);
+    assertEquals(payload, event.getPayload().getUac());
+  }
+
+  @Test
+  public void shouldSendUacCreated() {
+    assertSendUac(EventType.UAC_CREATED);
+  }
+
+  @Test
+  public void shouldSendUacUpdated() {
+    assertSendUac(EventType.UAC_UPDATED);
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void shouldRejectSendForMismatchingPayload() {
     Feedback feedbackResponse = loadJson(Feedback[].class);
@@ -337,7 +384,7 @@ public class EventPublisherTest {
   // -- replay send backup event tests ...
 
   @Test
-  public void shouldReplayOneFulfilmentEvent() throws Exception {
+  public void shouldSendBackupFulfilmentEvent() throws Exception {
     FulfilmentRequestedEvent ev = aFulfilmentRequestedEvent();
     sendBackupEvent(ev);
 
@@ -347,7 +394,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayOneRepondentAuthenticatedEvent() throws Exception {
+  public void shouldSendBackupRepondentAuthenticatedEvent() throws Exception {
     RespondentAuthenticatedEvent ev = aRespondentAuthenticatedEvent();
     sendBackupEvent(ev);
 
@@ -357,7 +404,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayOneRefusalReceivedEvent() throws Exception {
+  public void shouldSendBackupRefusalReceivedEvent() throws Exception {
     RespondentRefusalEvent ev = aRefusalEvent();
     sendBackupEvent(ev);
 
@@ -367,7 +414,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayOneUacCreatedEvent() throws Exception {
+  public void shouldSendBackupUacCreatedEvent() throws Exception {
     UACEvent ev = aUacEvent();
     ev.getEvent().setType(EventType.UAC_CREATED);
     sendBackupEvent(ev);
@@ -378,7 +425,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayOneUacUpdatedEvent() throws Exception {
+  public void shouldSendBackupUacUpdatedEvent() throws Exception {
     UACEvent ev = aUacEvent();
     ev.getEvent().setType(EventType.UAC_UPDATED);
     sendBackupEvent(ev);
@@ -389,7 +436,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayOneSurveyLaunchedEvent() throws Exception {
+  public void shouldSendBackupSurveyLaunchedEvent() throws Exception {
     SurveyLaunchedEvent ev = aSurveyLaunchedEvent();
     sendBackupEvent(ev);
 
@@ -399,7 +446,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayOneAddressModifiedEvent() throws Exception {
+  public void shouldSendBackupAddressModifiedEvent() throws Exception {
     AddressModifiedEvent ev = anAddressModifedEvent();
     sendBackupEvent(ev);
 
@@ -409,7 +456,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayOneAddressNotValidEvent() throws Exception {
+  public void shouldSendBackupAddressNotValidEvent() throws Exception {
     AddressNotValidEvent ev = anAddressNotValidEvent();
     sendBackupEvent(ev);
 
@@ -419,7 +466,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayOneAddressTypeChangedEvent() throws Exception {
+  public void shouldSendBackupAddressTypeChangedEvent() throws Exception {
     AddressTypeChangedEvent ev = anAddressTypeChangedEvent();
     sendBackupEvent(ev);
 
@@ -429,7 +476,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayOneCaseCreatedEvent() throws Exception {
+  public void shouldSendBackupCaseCreatedEvent() throws Exception {
     CaseEvent ev = aCaseEvent();
     ev.getEvent().setType(EventType.CASE_CREATED);
     sendBackupEvent(ev);
@@ -440,7 +487,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayOneCaseUpdatedEvent() throws Exception {
+  public void shouldSendBackupCaseUpdatedEvent() throws Exception {
     CaseEvent ev = aCaseEvent();
     ev.getEvent().setType(EventType.CASE_UPDATED);
     sendBackupEvent(ev);
@@ -451,7 +498,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayFeedbackEvent() throws Exception {
+  public void shouldSendBackupFeedbackEvent() throws Exception {
     FeedbackEvent ev = aFeedbackEvent();
     sendBackupEvent(ev);
 
@@ -461,7 +508,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayNewAddressReportedEvent() throws Exception {
+  public void shouldSendBackupNewAddressReportedEvent() throws Exception {
     NewAddressReportedEvent ev = aNewAddressReportedEvent();
     sendBackupEvent(ev);
 
@@ -471,7 +518,7 @@ public class EventPublisherTest {
   }
 
   @Test
-  public void shouldReplayQuestionnaireLinkedEvent() throws Exception {
+  public void shouldSendBackupQuestionnaireLinkedEvent() throws Exception {
     QuestionnaireLinkedEvent ev = aQuestionnaireLinkedEvent();
     sendBackupEvent(ev);
 
