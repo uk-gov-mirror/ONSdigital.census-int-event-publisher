@@ -1,0 +1,22 @@
+{
+  "sourceCaseId": "e4cd3a0a-b175-489a-810c-3f6429aced7d",
+  "collectionCase": {
+    "id": "dc4477d1-dd3f-4c69-b181-7ff725dc9fa4",
+    "caseType": "HH",
+    "survey": "xx",
+    "collectionExerciseId": "dc4477d1-dd3f-4c69-b181-7ff725dc9fa4",
+    "organisationName": "Cyberdyne Corp",
+    "ceExpectedCapacity": 12,
+    "fieldCoordinatorId": "x",
+    "fieldOfficerId": "y",
+    "address": {
+      "latitude": "222",
+      "longitude": "333",
+      "estabUprn": "100041045599",
+      "addressType": "HH",
+      "addressLevel": "U"
+    }
+  }
+}
+
+
