@@ -72,6 +72,12 @@ public abstract class EventBuilder {
 
   ObjectMapper objectMapper = new CustomObjectMapper();
 
+  /**
+   * Create event ready for send.
+   *
+   * @param sendInfo object containing payload , source and channel.
+   * @return event
+   */
   abstract GenericEvent create(SendInfo sendInfo);
 
   /**
@@ -193,11 +199,12 @@ public abstract class EventBuilder {
     }
   }
 
-  public abstract static class CaseBuilder extends EventBuilder {
+  public static class CaseCreatedBuilder extends EventBuilder {
     @Override
     GenericEvent create(SendInfo sendInfo) {
       CaseEvent caseEvent = new CaseEvent();
-      caseEvent.setEvent(buildHeader(type(), sendInfo.getSource(), sendInfo.getChannel()));
+      caseEvent.setEvent(
+          buildHeader(EventType.CASE_CREATED, sendInfo.getSource(), sendInfo.getChannel()));
       CasePayload casePayload = new CasePayload((CollectionCase) sendInfo.getPayload());
       caseEvent.setPayload(casePayload);
       return caseEvent;
@@ -209,21 +216,24 @@ public abstract class EventBuilder {
       EventPayload payload = ((CaseEvent) genericEvent).getPayload().getCollectionCase();
       return build(genericEvent, payload);
     }
-
-    abstract EventType type();
   }
 
-  public static class CaseCreatedBuilder extends CaseBuilder {
+  public static class CaseUpdatedBuilder extends EventBuilder {
     @Override
-    EventType type() {
-      return EventType.CASE_CREATED;
+    GenericEvent create(SendInfo sendInfo) {
+      CaseEvent caseEvent = new CaseEvent();
+      caseEvent.setEvent(
+          buildHeader(EventType.CASE_UPDATED, sendInfo.getSource(), sendInfo.getChannel()));
+      CasePayload casePayload = new CasePayload((CollectionCase) sendInfo.getPayload());
+      caseEvent.setPayload(casePayload);
+      return caseEvent;
     }
-  }
 
-  public static class CaseUpdatedBuilder extends CaseBuilder {
     @Override
-    EventType type() {
-      return EventType.CASE_UPDATED;
+    SendInfo create(String json) {
+      GenericEvent genericEvent = deserialiseEventJson(json, CaseEvent.class);
+      EventPayload payload = ((CaseEvent) genericEvent).getPayload().getCollectionCase();
+      return build(genericEvent, payload);
     }
   }
 
@@ -247,11 +257,12 @@ public abstract class EventBuilder {
     }
   }
 
-  public abstract static class UacBuilder extends EventBuilder {
+  public static class UacCreatedBuilder extends EventBuilder {
     @Override
     GenericEvent create(SendInfo sendInfo) {
       UACEvent uacEvent = new UACEvent();
-      uacEvent.setEvent(buildHeader(type(), sendInfo.getSource(), sendInfo.getChannel()));
+      uacEvent.setEvent(
+          buildHeader(EventType.UAC_CREATED, sendInfo.getSource(), sendInfo.getChannel()));
       UACPayload uacPayload = new UACPayload((UAC) sendInfo.getPayload());
       uacEvent.setPayload(uacPayload);
       return uacEvent;
@@ -263,21 +274,24 @@ public abstract class EventBuilder {
       EventPayload payload = ((UACEvent) genericEvent).getPayload().getUac();
       return build(genericEvent, payload);
     }
-
-    abstract EventType type();
   }
 
-  public static class UacCreatedBuilder extends UacBuilder {
+  public static class UacUpdatedBuilder extends EventBuilder {
     @Override
-    EventType type() {
-      return EventType.UAC_CREATED;
+    GenericEvent create(SendInfo sendInfo) {
+      UACEvent uacEvent = new UACEvent();
+      uacEvent.setEvent(
+          buildHeader(EventType.UAC_UPDATED, sendInfo.getSource(), sendInfo.getChannel()));
+      UACPayload uacPayload = new UACPayload((UAC) sendInfo.getPayload());
+      uacEvent.setPayload(uacPayload);
+      return uacEvent;
     }
-  }
 
-  public static class UacUpdatedBuilder extends UacBuilder {
     @Override
-    EventType type() {
-      return EventType.UAC_UPDATED;
+    SendInfo create(String json) {
+      GenericEvent genericEvent = deserialiseEventJson(json, UACEvent.class);
+      EventPayload payload = ((UACEvent) genericEvent).getPayload().getUac();
+      return build(genericEvent, payload);
     }
   }
 
