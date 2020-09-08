@@ -1,0 +1,46 @@
+[
+  {
+    "event": {
+      "type": "CASE_CREATED",
+      "source": "RESPONDENT_HOME",
+      "channel": "RH",
+      "dateTime": "2020-06-29T13:25:36.042Z",
+      "transactionId": "191f7c80-4774-4e1b-a52c-ef8c209b90e4"
+    },
+    "payload": {
+      "collectionCase": {
+        "id": "dc4477d1-dd3f-4c69-b181-7ff725dc9fa4",
+        "caseRef": "10000000010",
+        "caseType": "HH",
+        "survey": "Census",
+        "collectionExerciseId": "n66de4dc-3c3b-11e9-b210-d663bd873d93",
+        "address": {
+          "addressLine1": "1 main street",
+          "addressLine2": "upper upperingham",
+          "addressLine3": "",
+          "townName": "upton",
+          "postcode": "UP103UP",
+          "region": "E",
+          "uprn": "XXXXXXXXXXXXX",
+          "latitude": "50.863849",
+          "longitude": "-1.229710",
+          "estabUprn": null,
+          "addressType": "CE",
+          "addressLevel": "E",
+          "estabType": "XXX"
+        },
+        "contact": {
+          "title": "Ms",
+          "forename": "jo",
+          "surname": "smith",
+          "telNo": "+447890000000"
+        },
+        "actionableFrom": "2011-08-12T20:17:46.384Z",
+        "handDelivery": true,
+        "addressInvalid": true,
+        "createdDateTime": "2020-06-05T15:05:18.717Z"
+      }
+    }
+  }
+]
+

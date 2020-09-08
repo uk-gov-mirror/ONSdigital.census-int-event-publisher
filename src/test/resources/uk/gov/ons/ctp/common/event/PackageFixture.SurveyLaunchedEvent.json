@@ -1,0 +1,19 @@
+[
+  {
+    "event": {
+      "type": "SURVEY_LAUNCHED",
+      "source": "RESPONDENT_HOME",
+      "channel": "RH",
+      "dateTime": "2020-06-29T13:25:36.042Z",
+      "transactionId": "14490f12-cb0b-459d-921e-cd4c59613268"
+    },
+    "payload": {
+      "response": {
+        "questionnaireId": "1110000009",
+        "caseId": "dc4477d1-dd3f-4c69-b181-7ff725dc9fa4",
+        "agentId" : "x1"
+      }
+    }
+  }
+]
+

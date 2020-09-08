@@ -1,0 +1,69 @@
+[
+  {
+    "event": {
+      "type": "FULFILMENT_REQUESTED",
+      "source": "CONTACT_CENTRE_API",
+      "channel": "CC",
+      "dateTime": "2020-06-29T13:25:36.042Z",
+      "transactionId": "1d91fec8-4f3a-4ce0-ad4f-165815bd5ec4"
+    },
+    "payload": {
+      "fulfilmentRequest": {
+        "fulfilmentCode": "ENH1",
+        "caseId": "id-123",
+        "individualCaseId": "ead8aa0e-793f-4489-ae26-1989e0bd76b1",
+        "contact": {
+          "title": "Ms",
+          "forename": "jo",
+          "surname": "smith",
+          "telNo": "+447890000000"
+        }
+      }
+    }
+  },
+  {
+    "event": {
+      "type": "FULFILMENT_REQUESTED",
+      "source": "CONTACT_CENTRE_API",
+      "channel": "CC",
+      "dateTime": "2020-06-29T13:25:36.042Z",
+      "transactionId": "d82637e7-bf67-44fc-a1ce-1f4ecdf35ede"
+    },
+    "payload": {
+      "fulfilmentRequest": {
+        "fulfilmentCode": "ENH1",
+        "caseId": "id-123",
+        "individualCaseId": "ead8aa0e-793f-4489-ae26-1989e0bd76b1",
+        "contact": {
+          "title": "Ms",
+          "forename": "jo",
+          "surname": "smith",
+          "telNo": "+447890000000"
+        }
+      }
+    }
+  },
+  {
+    "event": {
+      "type": "FULFILMENT_REQUESTED",
+      "source": "CONTACT_CENTRE_API",
+      "channel": "CC",
+      "dateTime": "2020-06-29T13:25:36.042Z",
+      "transactionId": "9e6456e4-fe21-48c9-8f7d-46179ecbc3d3"
+    },
+    "payload": {
+      "fulfilmentRequest": {
+        "fulfilmentCode": "ENH1",
+        "caseId": "id-123",
+        "individualCaseId": "ead8aa0e-793f-4489-ae26-1989e0bd76b1",
+        "contact": {
+          "title": "Ms",
+          "forename": "jo",
+          "surname": "smith",
+          "telNo": "+447890000000"
+        }
+      }
+    }
+  }
+]
+

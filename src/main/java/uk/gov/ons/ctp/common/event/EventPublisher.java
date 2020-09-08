@@ -3,47 +3,24 @@ package uk.gov.ons.ctp.common.event;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import lombok.Getter;
+import uk.gov.ons.ctp.common.event.EventBuilder.SendInfo;
 import uk.gov.ons.ctp.common.event.model.AddressModification;
-import uk.gov.ons.ctp.common.event.model.AddressModifiedEvent;
-import uk.gov.ons.ctp.common.event.model.AddressModifiedPayload;
 import uk.gov.ons.ctp.common.event.model.AddressNotValid;
-import uk.gov.ons.ctp.common.event.model.AddressNotValidEvent;
-import uk.gov.ons.ctp.common.event.model.AddressNotValidPayload;
 import uk.gov.ons.ctp.common.event.model.AddressTypeChanged;
-import uk.gov.ons.ctp.common.event.model.AddressTypeChangedEvent;
-import uk.gov.ons.ctp.common.event.model.AddressTypeChangedPayload;
-import uk.gov.ons.ctp.common.event.model.CaseEvent;
-import uk.gov.ons.ctp.common.event.model.CasePayload;
 import uk.gov.ons.ctp.common.event.model.CollectionCase;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
 import uk.gov.ons.ctp.common.event.model.Feedback;
-import uk.gov.ons.ctp.common.event.model.FeedbackEvent;
-import uk.gov.ons.ctp.common.event.model.FeedbackPayload;
-import uk.gov.ons.ctp.common.event.model.FulfilmentPayload;
 import uk.gov.ons.ctp.common.event.model.FulfilmentRequest;
-import uk.gov.ons.ctp.common.event.model.FulfilmentRequestedEvent;
 import uk.gov.ons.ctp.common.event.model.GenericEvent;
-import uk.gov.ons.ctp.common.event.model.Header;
 import uk.gov.ons.ctp.common.event.model.NewAddress;
-import uk.gov.ons.ctp.common.event.model.NewAddressPayload;
-import uk.gov.ons.ctp.common.event.model.NewAddressReportedEvent;
 import uk.gov.ons.ctp.common.event.model.QuestionnaireLinkedDetails;
-import uk.gov.ons.ctp.common.event.model.QuestionnaireLinkedEvent;
-import uk.gov.ons.ctp.common.event.model.QuestionnaireLinkedPayload;
-import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedEvent;
 import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedResponse;
 import uk.gov.ons.ctp.common.event.model.RespondentRefusalDetails;
-import uk.gov.ons.ctp.common.event.model.RespondentRefusalEvent;
-import uk.gov.ons.ctp.common.event.model.RespondentRefusalPayload;
-import uk.gov.ons.ctp.common.event.model.SurveyLaunchedEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
 import uk.gov.ons.ctp.common.event.model.UAC;
-import uk.gov.ons.ctp.common.event.model.UACEvent;
-import uk.gov.ons.ctp.common.event.model.UACPayload;
+import uk.gov.ons.ctp.common.event.persistence.EventBackupData;
 import uk.gov.ons.ctp.common.event.persistence.EventPersistence;
 
 /** Service responsible for the publication of events. */
@@ -103,34 +80,39 @@ public class EventPublisher {
 
   @Getter
   public enum EventType {
-    ADDRESS_MODIFIED(AddressModification.class),
-    ADDRESS_NOT_VALID(AddressNotValid.class),
-    ADDRESS_TYPE_CHANGED(AddressTypeChanged.class),
+    ADDRESS_MODIFIED(AddressModification.class, EventBuilder.ADDRESS_MODIFIED),
+    ADDRESS_NOT_VALID(AddressNotValid.class, EventBuilder.ADDRESS_NOT_VALID),
+    ADDRESS_TYPE_CHANGED(AddressTypeChanged.class, EventBuilder.ADDRESS_TYPE_CHANGED),
     APPOINTMENT_REQUESTED,
-    CASE_CREATED(CollectionCase.class),
-    CASE_UPDATED(CollectionCase.class),
+    CASE_CREATED(CollectionCase.class, EventBuilder.CASE_CREATED),
+    CASE_UPDATED(CollectionCase.class, EventBuilder.CASE_UPDATED),
     CCS_PROPERTY_LISTED,
     FIELD_CASE_UPDATED,
     FULFILMENT_CONFIRMED,
-    FULFILMENT_REQUESTED(FulfilmentRequest.class),
-    NEW_ADDRESS_REPORTED(NewAddress.class),
-    QUESTIONNAIRE_LINKED(QuestionnaireLinkedDetails.class),
-    REFUSAL_RECEIVED(RespondentRefusalDetails.class),
-    RESPONDENT_AUTHENTICATED(RespondentAuthenticatedResponse.class),
+    FULFILMENT_REQUESTED(FulfilmentRequest.class, EventBuilder.FULFILMENT_REQUESTED),
+    NEW_ADDRESS_REPORTED(NewAddress.class, EventBuilder.NEW_ADDRESS_REPORTED),
+    QUESTIONNAIRE_LINKED(QuestionnaireLinkedDetails.class, EventBuilder.QUESTIONNAIRE_LINKED),
+    REFUSAL_RECEIVED(RespondentRefusalDetails.class, EventBuilder.REFUSAL_RECEIVED),
+    RESPONDENT_AUTHENTICATED(
+        RespondentAuthenticatedResponse.class, EventBuilder.RESPONDENT_AUTHENTICATED),
     RESPONSE_RECEIVED,
     SAMPLE_UNIT_VALIDATED,
-    SURVEY_LAUNCHED(SurveyLaunchedResponse.class),
-    UAC_CREATED(UAC.class),
-    UAC_UPDATED(UAC.class),
+    SURVEY_LAUNCHED(SurveyLaunchedResponse.class, EventBuilder.SURVEY_LAUNCHED),
+    UAC_CREATED(UAC.class, EventBuilder.UAC_CREATED),
+    UAC_UPDATED(UAC.class, EventBuilder.UAC_UPDATED),
     UNDELIVERED_MAIL_REPORTED,
-    FEEDBACK(Feedback.class);
+    FEEDBACK(Feedback.class, EventBuilder.FEEDBACK);
 
     private Class<? extends EventPayload> payloadType;
+    private EventBuilder builder;
 
-    private EventType() {}
+    private EventType() {
+      this.builder = EventBuilder.NONE;
+    }
 
-    private EventType(Class<? extends EventPayload> payloadType) {
+    private EventType(Class<? extends EventPayload> payloadType, EventBuilder builder) {
       this.payloadType = payloadType;
+      this.builder = builder;
     }
   }
 
@@ -216,15 +198,33 @@ public class EventPublisher {
 
     log.with(eventType).with(source).with(channel).with(payload).debug("Enter sendEvent()");
 
-    String transactionId = doSendEvent(eventType, source, channel, payload);
+    String transactionId = doSendEvent(eventType, new SendInfo(payload, source, channel));
 
     log.with(eventType).with(source).with(channel).with(payload).debug("Exit sendEvent()");
 
     return transactionId;
   }
 
-  private String doSendEvent(
-      EventType eventType, Source source, Channel channel, EventPayload payload) {
+  /**
+   * Send a backup event that would have previously been stored in cloud data storage.
+   *
+   * @param event backup event , typically recovered from firestore.
+   * @return String UUID transaction Id for event
+   */
+  public String sendEvent(EventBackupData event) {
+    EventType type = event.getEventType();
+    SendInfo sendInfo = type.getBuilder().create(event.getEvent());
+    if (sendInfo == null) {
+      log.error("Unrecognised event type {}", type);
+      throw new UnsupportedOperationException("Unknown event: " + type);
+    }
+    String transactionId = doSendEvent(type, sendInfo);
+    log.debug("Sent {} with transactionId {}", event.getEventType(), transactionId);
+    return transactionId;
+  }
+
+  private String doSendEvent(EventType eventType, SendInfo sendInfo) {
+    EventPayload payload = sendInfo.getPayload();
 
     if (!payload.getClass().equals(eventType.getPayloadType())) {
       log.with("payloadType", payload.getClass())
@@ -246,117 +246,12 @@ public class EventPublisher {
       throw new UnsupportedOperationException(errorMessage);
     }
 
-    GenericEvent genericEvent = null;
-    switch (eventType) {
-      case FULFILMENT_REQUESTED:
-        FulfilmentRequestedEvent fulfilmentRequestedEvent = new FulfilmentRequestedEvent();
-        fulfilmentRequestedEvent.setEvent(buildHeader(eventType, source, channel));
-        FulfilmentPayload fulfilmentPayload = new FulfilmentPayload((FulfilmentRequest) payload);
-        fulfilmentRequestedEvent.setPayload(fulfilmentPayload);
-        genericEvent = fulfilmentRequestedEvent;
-        break;
-
-      case SURVEY_LAUNCHED:
-        SurveyLaunchedEvent surveyLaunchedEvent = new SurveyLaunchedEvent();
-        surveyLaunchedEvent.setEvent(buildHeader(eventType, source, channel));
-        surveyLaunchedEvent.getPayload().setResponse((SurveyLaunchedResponse) payload);
-        genericEvent = surveyLaunchedEvent;
-        break;
-
-      case RESPONDENT_AUTHENTICATED:
-        RespondentAuthenticatedEvent respondentAuthenticatedEvent =
-            new RespondentAuthenticatedEvent();
-        respondentAuthenticatedEvent.setEvent(buildHeader(eventType, source, channel));
-        respondentAuthenticatedEvent
-            .getPayload()
-            .setResponse((RespondentAuthenticatedResponse) payload);
-        genericEvent = respondentAuthenticatedEvent;
-        break;
-
-      case CASE_CREATED:
-      case CASE_UPDATED:
-        CaseEvent caseEvent = new CaseEvent();
-        caseEvent.setEvent(buildHeader(eventType, source, channel));
-        CasePayload casePayload = new CasePayload((CollectionCase) payload);
-        caseEvent.setPayload(casePayload);
-        genericEvent = caseEvent;
-        break;
-
-      case REFUSAL_RECEIVED:
-        RespondentRefusalEvent respondentRefusalEvent = new RespondentRefusalEvent();
-        respondentRefusalEvent.setEvent(buildHeader(eventType, source, channel));
-        RespondentRefusalPayload respondentRefusalPayload =
-            new RespondentRefusalPayload((RespondentRefusalDetails) payload);
-        respondentRefusalEvent.setPayload(respondentRefusalPayload);
-        genericEvent = respondentRefusalEvent;
-        break;
-
-      case UAC_CREATED:
-      case UAC_UPDATED:
-        UACEvent uacEvent = new UACEvent();
-        uacEvent.setEvent(buildHeader(eventType, source, channel));
-        UACPayload uacPayload = new UACPayload((UAC) payload);
-        uacEvent.setPayload(uacPayload);
-        genericEvent = uacEvent;
-        break;
-
-      case ADDRESS_MODIFIED:
-        AddressModifiedEvent addressModifiedEvent = new AddressModifiedEvent();
-        addressModifiedEvent.setEvent(buildHeader(eventType, source, channel));
-        AddressModifiedPayload addressModifiedPayload =
-            new AddressModifiedPayload((AddressModification) payload);
-        addressModifiedEvent.setPayload(addressModifiedPayload);
-        genericEvent = addressModifiedEvent;
-        break;
-
-      case ADDRESS_NOT_VALID:
-        AddressNotValidEvent addrNotValidEvent = new AddressNotValidEvent();
-        addrNotValidEvent.setEvent(buildHeader(eventType, source, channel));
-        AddressNotValidPayload addrNotValidPayload =
-            new AddressNotValidPayload((AddressNotValid) payload);
-        addrNotValidEvent.setPayload(addrNotValidPayload);
-        genericEvent = addrNotValidEvent;
-        break;
-
-      case ADDRESS_TYPE_CHANGED:
-        AddressTypeChangedEvent addressTypeChangedEvent = new AddressTypeChangedEvent();
-        addressTypeChangedEvent.setEvent(buildHeader(eventType, source, channel));
-        AddressTypeChangedPayload addressTypeChangedPayload =
-            new AddressTypeChangedPayload((AddressTypeChanged) payload);
-        addressTypeChangedEvent.setPayload(addressTypeChangedPayload);
-        genericEvent = addressTypeChangedEvent;
-        break;
-
-      case NEW_ADDRESS_REPORTED:
-        NewAddressReportedEvent newAddressReportedEvent = new NewAddressReportedEvent();
-        newAddressReportedEvent.setEvent(buildHeader(eventType, source, channel));
-        NewAddressPayload newAddressPayload = new NewAddressPayload((NewAddress) payload);
-        newAddressReportedEvent.setPayload(newAddressPayload);
-        genericEvent = newAddressReportedEvent;
-        break;
-
-      case FEEDBACK:
-        FeedbackEvent feedbackEvent = new FeedbackEvent();
-        feedbackEvent.setEvent(buildHeader(eventType, source, channel));
-        FeedbackPayload feedbackPayload = new FeedbackPayload((Feedback) payload);
-        feedbackEvent.setPayload(feedbackPayload);
-        genericEvent = feedbackEvent;
-        break;
-
-      case QUESTIONNAIRE_LINKED:
-        QuestionnaireLinkedEvent questionnaireLinkedEvent = new QuestionnaireLinkedEvent();
-        questionnaireLinkedEvent.setEvent(buildHeader(eventType, source, channel));
-        QuestionnaireLinkedPayload questionnaireLinkedPayload =
-            new QuestionnaireLinkedPayload((QuestionnaireLinkedDetails) payload);
-        questionnaireLinkedEvent.setPayload(questionnaireLinkedPayload);
-        genericEvent = questionnaireLinkedEvent;
-        break;
-
-      default:
-        log.with("eventType", eventType).error("Routing key for eventType not configured");
-        String errorMessage =
-            payload.getClass().getName() + " for EventType '" + eventType + "' not supported yet";
-        throw new UnsupportedOperationException(errorMessage);
+    GenericEvent genericEvent = eventType.getBuilder().create(sendInfo);
+    if (genericEvent == null) {
+      log.with("eventType", eventType).error("Payload for eventType not configured");
+      String errorMessage =
+          payload.getClass().getName() + " for EventType '" + eventType + "' not supported yet";
+      throw new UnsupportedOperationException(errorMessage);
     }
 
     try {
@@ -364,19 +259,18 @@ public class EventPublisher {
       sender.sendEvent(routingKey, genericEvent);
       log.with("eventType", eventType).with("routingKey", routingKey).debug("Have sent message");
     } catch (Exception e) {
-      // diff sender impls may send diff exceptions
+      boolean backup = eventPersistence != null;
       log.with("eventType", eventType)
           .with("routingKey", routingKey)
-          .with("exception", e)
-          .error("Failed to send event");
+          .error("Failed to send event {}", backup ? ", but will now backup to firestore" : "");
 
-      if (eventPersistence == null) {
+      if (!backup) {
         throw new EventPublishException("Rabbit failed to send event", e);
       }
 
       // Save event to persistent store
       try {
-        eventPersistence.persistEvent(eventType, routingKey, genericEvent);
+        eventPersistence.persistEvent(eventType, genericEvent);
         log.with("eventType", eventType)
             .with("routingKey", routingKey)
             .info("Event data saved to persistent store");
@@ -392,15 +286,5 @@ public class EventPublisher {
     }
 
     return genericEvent.getEvent().getTransactionId();
-  }
-
-  private static Header buildHeader(EventType type, Source source, Channel channel) {
-    return Header.builder()
-        .type(type)
-        .source(source)
-        .channel(channel)
-        .dateTime(new Date())
-        .transactionId(UUID.randomUUID().toString())
-        .build();
   }
 }

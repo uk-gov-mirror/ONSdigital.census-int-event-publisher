@@ -26,7 +26,6 @@ import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.CTPException.Fault;
 import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
-import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
 import uk.gov.ons.ctp.common.event.EventPublisher.Source;
 import uk.gov.ons.ctp.common.event.model.GenericEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedEvent;
@@ -72,9 +71,8 @@ public class EventPublisherWithPersistenceTest {
             EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveyLaunchedResponse);
 
     // Verify that the event was persistent following simulated Rabbit failure
-    RoutingKey routingKey = RoutingKey.forType(EventType.RESPONDENT_AUTHENTICATED);
     verify(eventPersistence, times(1))
-        .persistEvent(eq(EventType.SURVEY_LAUNCHED), eq(routingKey), eventCapture.capture());
+        .persistEvent(eq(EventType.SURVEY_LAUNCHED), eventCapture.capture());
     SurveyLaunchedEvent event = eventCapture.getValue();
     assertHeader(
         event, transactionId, EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH);
@@ -88,7 +86,7 @@ public class EventPublisherWithPersistenceTest {
     Mockito.doThrow(new AmqpException("Failed to send")).when(sender).sendEvent(any(), any());
     Mockito.doThrow(new CTPException(Fault.SYSTEM_ERROR, "Firestore broken"))
         .when(eventPersistence)
-        .persistEvent(any(), any(), any());
+        .persistEvent(any(), any());
 
     Exception e =
         assertThrows(

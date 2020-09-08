@@ -1,0 +1,37 @@
+[
+  {
+    "event": {
+      "type": "REFUSAL_RECEIVED",
+      "source": "CONTACT_CENTRE_API",
+      "channel": "CC",
+      "dateTime": "2020-06-29T13:25:36.042Z",
+      "transactionId": "2e62f0a2-d83f-43b2-97fc-d300e2ed59cb"
+    },
+    "payload": {
+      "refusal": {
+        "type": "EXTRAORDINARY_REFUSAL",
+        "agentId": "x1",
+        "callId": "898-NOW",
+        "isHouseholder": "true",
+        "collectionCase": {
+          "id": "18353ceb-28cf-4a64-bee2-c4dc556d1268"
+        },
+        "contact": {
+          "title": "Ms",
+          "forename": "jo",
+          "surname": "smith"
+        },
+        "address": {
+          "addressLine1": "1 main street",
+          "addressLine2": "upper upperingham",
+          "addressLine3": "Lower Upton",
+          "townName": "Upton",
+          "postcode": "UP103UP",
+          "region": "E",
+          "uprn": "10013041069"
+        }
+      }
+    }
+  }
+]
+

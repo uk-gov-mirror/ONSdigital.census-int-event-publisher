@@ -1,0 +1,19 @@
+[
+  {
+    "event": {
+      "type": "FEEDBACK",
+      "source": "RESPONDENT_HOME",
+      "channel": "RH",
+      "dateTime": "2020-06-29T13:25:36.042Z",
+      "transactionId": "e7757405-e318-41a1-ab24-67b3248135ef"
+    },
+    "payload": {
+      "feedback": {
+        "pageUrl": "url-x",
+        "pageTitle": "randomPage",
+        "feedbackText": "Bla bla bla"
+      }
+    }
+  }
+]
+

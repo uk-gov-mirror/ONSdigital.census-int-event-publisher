@@ -1,0 +1,19 @@
+[
+  {
+    "event": {
+      "type": "QUESTIONNAIRE_LINKED",
+      "source": "RESPONDENT_HOME",
+      "channel": "RH",
+      "dateTime": "2020-06-29T13:25:36.042Z",
+      "transactionId": "52dddb1c-56cf-4e12-98bf-779aa733cb57"
+    },
+    "payload": {
+      "uac": {
+        "questionnaireId": "1110000009",
+        "caseId": "dc4477d1-dd3f-4c69-b181-7ff725dc9fa4",
+        "individualCaseId": "ead8aa0e-793f-4489-ae26-1989e0bd76b1"
+      }
+    }
+  }
+]
+
