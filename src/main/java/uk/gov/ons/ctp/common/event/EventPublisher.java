@@ -5,6 +5,7 @@ import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
 import lombok.Getter;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
 import uk.gov.ons.ctp.common.event.EventBuilder.SendInfo;
 import uk.gov.ons.ctp.common.event.model.AddressModification;
 import uk.gov.ons.ctp.common.event.model.AddressNotValid;
@@ -29,6 +30,7 @@ public class EventPublisher {
   private static final Logger log = LoggerFactory.getLogger(EventPublisher.class);
 
   private EventSender sender;
+  private CircuitBreaker circuitBreaker;
 
   private EventPersistence eventPersistence;
 
@@ -145,9 +147,11 @@ public class EventPublisher {
   }
   // @formatter:on
 
-  private EventPublisher(EventSender eventSender, EventPersistence eventPersistence) {
+  private EventPublisher(
+      EventSender eventSender, EventPersistence eventPersistence, CircuitBreaker circuitBreaker) {
     this.sender = eventSender;
     this.eventPersistence = eventPersistence;
+    this.circuitBreaker = circuitBreaker;
   }
 
   /**
@@ -158,7 +162,7 @@ public class EventPublisher {
    * @return an EventPubisher object.
    */
   public static EventPublisher createWithoutEventPersistence(EventSender eventSender) {
-    return new EventPublisher(eventSender, null);
+    return new EventPublisher(eventSender, null, null);
   }
 
   /**
@@ -173,7 +177,12 @@ public class EventPublisher {
    */
   public static EventPublisher createWithEventPersistence(
       EventSender eventSender, EventPersistence eventPersistence) {
-    return new EventPublisher(eventSender, eventPersistence);
+    return new EventPublisher(eventSender, eventPersistence, null);
+  }
+
+  public static EventPublisher createWithEventPersistence(
+      EventSender eventSender, EventPersistence eventPersistence, CircuitBreaker circuitBreaker) {
+    return new EventPublisher(eventSender, eventPersistence, circuitBreaker);
   }
 
   /**
@@ -255,9 +264,7 @@ public class EventPublisher {
     }
 
     try {
-      log.with("eventType", eventType).with("routingKey", routingKey).debug("Sending message");
-      sender.sendEvent(routingKey, genericEvent);
-      log.with("eventType", eventType).with("routingKey", routingKey).debug("Have sent message");
+      sendToRabbit(eventType, routingKey, genericEvent);
     } catch (Exception e) {
       boolean backup = eventPersistence != null;
       log.with("eventType", eventType)
@@ -286,5 +293,27 @@ public class EventPublisher {
     }
 
     return genericEvent.getEvent().getTransactionId();
+  }
+
+  // send to RabbitMQ
+  private void sendToRabbit(EventType eventType, RoutingKey routingKey, GenericEvent genericEvent)
+      throws Exception {
+    log.with("eventType", eventType).with("routingKey", routingKey).debug("Sending message");
+
+    if (circuitBreaker == null) {
+      sender.sendEvent(routingKey, genericEvent);
+    } else {
+      this.circuitBreaker.run(
+          () -> {
+            try {
+              sender.sendEvent(routingKey, genericEvent);
+            } catch (Exception e) {
+              throw new RuntimeException(e);
+            }
+            return null;
+          });
+    }
+
+    log.with("eventType", eventType).with("routingKey", routingKey).debug("Have sent message");
   }
 }
