@@ -305,11 +305,7 @@ public class EventPublisher {
     } else {
       this.circuitBreaker.run(
           () -> {
-            try {
-              sender.sendEvent(routingKey, genericEvent);
-            } catch (Exception e) {
-              throw new RuntimeException(e);
-            }
+            sender.sendEvent(routingKey, genericEvent);
             return null;
           });
     }

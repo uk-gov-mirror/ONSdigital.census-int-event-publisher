@@ -67,11 +67,15 @@ public class NativeRabbitEventSender implements EventSender {
   }
 
   @Override
-  public void sendEvent(RoutingKey routingKey, GenericEvent genericEvent) throws Exception {
-    channel.basicPublish(
-        exchange,
-        routingKey.getKey(),
-        null,
-        objectMapper.writeValueAsString(genericEvent).getBytes("UTF-8"));
+  public void sendEvent(RoutingKey routingKey, GenericEvent genericEvent) {
+    try {
+      channel.basicPublish(
+          exchange,
+          routingKey.getKey(),
+          null,
+          objectMapper.writeValueAsString(genericEvent).getBytes("UTF-8"));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
