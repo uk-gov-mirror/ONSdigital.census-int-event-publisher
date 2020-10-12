@@ -264,7 +264,7 @@ public class EventPublisher {
     }
 
     try {
-      sendToRabbit(eventType, routingKey, genericEvent);
+      sendToRabbit(routingKey, genericEvent);
     } catch (Exception e) {
       boolean backup = eventPersistence != null;
       log.with("eventType", eventType)
@@ -295,21 +295,35 @@ public class EventPublisher {
     return genericEvent.getEvent().getTransactionId();
   }
 
-  // send to RabbitMQ
-  private void sendToRabbit(EventType eventType, RoutingKey routingKey, GenericEvent genericEvent)
-      throws Exception {
-    log.with("eventType", eventType).with("routingKey", routingKey).debug("Sending message");
-
+  private void sendToRabbit(RoutingKey routingKey, GenericEvent genericEvent) {
     if (circuitBreaker == null) {
-      sender.sendEvent(routingKey, genericEvent);
+      sendToRabbit(routingKey, genericEvent, "");
     } else {
-      this.circuitBreaker.run(
-          () -> {
-            sender.sendEvent(routingKey, genericEvent);
-            return null;
-          });
+      try {
+        this.circuitBreaker.run(
+            () -> {
+              sendToRabbit(routingKey, genericEvent, "within circuit-breaker");
+              return null;
+            },
+            throwable -> {
+              throw new EventCircuitBreakerException(throwable);
+            });
+      } catch (EventCircuitBreakerException e) {
+        log.warn("{}: {}", e.getMessage(), e.getCause().getMessage());
+        throw e;
+      }
     }
+  }
 
-    log.with("eventType", eventType).with("routingKey", routingKey).debug("Have sent message");
+  private void sendToRabbit(
+      RoutingKey routingKey, GenericEvent genericEvent, String loggingMsgSuffix) {
+    EventType eventType = genericEvent.getEvent().getType();
+    log.with("eventType", eventType)
+        .with("routingKey", routingKey)
+        .debug("Sending message {}", loggingMsgSuffix);
+    sender.sendEvent(routingKey, genericEvent);
+    log.with("eventType", eventType)
+        .with("routingKey", routingKey)
+        .debug("Message sent successfully");
   }
 }
