@@ -173,13 +173,9 @@ public class EventPublisher {
    * @param eventSender the impl of EventSender that will be used to ... send the event.
    * @param eventPersistence is an EventPersistence implementation which does the actual event
    *     persistence.
+   * @param circuitBreaker circuit breaker object, or null if not required.
    * @return an EventPubisher object.
    */
-  public static EventPublisher createWithEventPersistence(
-      EventSender eventSender, EventPersistence eventPersistence) {
-    return new EventPublisher(eventSender, eventPersistence, null);
-  }
-
   public static EventPublisher createWithEventPersistence(
       EventSender eventSender, EventPersistence eventPersistence, CircuitBreaker circuitBreaker) {
     return new EventPublisher(eventSender, eventPersistence, circuitBreaker);

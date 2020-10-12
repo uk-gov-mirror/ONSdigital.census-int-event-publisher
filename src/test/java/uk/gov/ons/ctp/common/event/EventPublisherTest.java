@@ -101,7 +101,7 @@ public class EventPublisherTest {
 
   @Test
   public void shouldCreateWithEventPersistence() {
-    EventPublisher ep = EventPublisher.createWithEventPersistence(sender, eventPersistence);
+    EventPublisher ep = EventPublisher.createWithEventPersistence(sender, eventPersistence, null);
     assertNotNull(ReflectionTestUtils.getField(ep, "eventPersistence"));
     assertEquals(sender, ReflectionTestUtils.getField(ep, "sender"));
   }
