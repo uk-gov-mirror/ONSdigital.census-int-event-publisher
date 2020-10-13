@@ -305,7 +305,7 @@ public class EventPublisher {
               throw new EventCircuitBreakerException(throwable);
             });
       } catch (EventCircuitBreakerException e) {
-        log.warn("{}: {}", e.getMessage(), e.getCause().getMessage());
+        log.debug("{}: {}", e.getMessage(), e.getCause().getMessage());
         throw e;
       }
     }
