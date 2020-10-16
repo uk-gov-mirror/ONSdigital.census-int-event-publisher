@@ -1,7 +1,6 @@
 package uk.gov.ons.ctp.common.event;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -11,11 +10,11 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static uk.gov.ons.ctp.common.event.EventPublisherTestUtil.assertHeader;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Date;
-import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -102,7 +101,7 @@ public class EventPublisherTest {
 
   @Test
   public void shouldCreateWithEventPersistence() {
-    EventPublisher ep = EventPublisher.createWithEventPersistence(sender, eventPersistence);
+    EventPublisher ep = EventPublisher.createWithEventPersistence(sender, eventPersistence, null);
     assertNotNull(ReflectionTestUtils.getField(ep, "eventPersistence"));
     assertEquals(sender, ReflectionTestUtils.getField(ep, "sender"));
   }
@@ -619,20 +618,6 @@ public class EventPublisherTest {
 
   private <T> T loadJson(Class<T[]> clazz) {
     return FixtureHelper.loadPackageFixtures(clazz).get(0);
-  }
-
-  private void assertHeader(
-      GenericEvent event,
-      String transactionId,
-      EventType expectedType,
-      Source expectedSource,
-      Channel expectedChannel) {
-    assertEquals(transactionId, event.getEvent().getTransactionId());
-    assertThat(UUID.fromString(event.getEvent().getTransactionId()), instanceOf(UUID.class));
-    assertEquals(expectedType, event.getEvent().getType());
-    assertEquals(expectedSource, event.getEvent().getSource());
-    assertEquals(expectedChannel, event.getEvent().getChannel());
-    assertThat(event.getEvent().getDateTime(), instanceOf(Date.class));
   }
 
   private void verifyEventSent(GenericEvent orig, GenericEvent sent) {

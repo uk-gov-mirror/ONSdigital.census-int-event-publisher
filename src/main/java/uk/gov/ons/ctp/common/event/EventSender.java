@@ -5,7 +5,7 @@ import uk.gov.ons.ctp.common.event.model.GenericEvent;
 
 public interface EventSender {
 
-  void sendEvent(RoutingKey routingKey, GenericEvent genericEvent) throws Exception;
+  void sendEvent(RoutingKey routingKey, GenericEvent genericEvent);
 
   default void close() throws Exception {}
 }
