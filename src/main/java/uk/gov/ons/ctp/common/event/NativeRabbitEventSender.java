@@ -3,13 +3,16 @@ package uk.gov.ons.ctp.common.event;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.concurrent.TimeoutException;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.CTPException.Fault;
+import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
 import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
 import uk.gov.ons.ctp.common.event.model.GenericEvent;
 import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
@@ -17,14 +20,17 @@ import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
 public class NativeRabbitEventSender implements EventSender {
   private static final Logger log = LoggerFactory.getLogger(NativeRabbitEventSender.class);
 
-  Connection connection;
-  String exchange;
-  Channel channel;
+  private Connection connection;
+  private String exchange;
+  private Channel channel;
+  private boolean addRmProperties;
 
-  ObjectMapper objectMapper;
+  private ObjectMapper objectMapper;
 
-  public NativeRabbitEventSender(Connection rabbitConnection, String exchange) throws CTPException {
+  public NativeRabbitEventSender(
+      Connection rabbitConnection, String exchange, boolean addRmProperties) throws CTPException {
     this.connection = rabbitConnection;
+    this.addRmProperties = addRmProperties;
 
     try {
       this.exchange = exchange;
@@ -39,9 +45,10 @@ public class NativeRabbitEventSender implements EventSender {
     objectMapper = new CustomObjectMapper();
   }
 
-  public NativeRabbitEventSender(RabbitConnectionDetails connectionDetails, String exchange)
+  public NativeRabbitEventSender(
+      RabbitConnectionDetails connectionDetails, String exchange, boolean addRmProperties)
       throws CTPException {
-    this(createRabbitConnection(connectionDetails), exchange);
+    this(createRabbitConnection(connectionDetails), exchange, addRmProperties);
   }
 
   private static Connection createRabbitConnection(RabbitConnectionDetails connectionDetails)
@@ -66,13 +73,42 @@ public class NativeRabbitEventSender implements EventSender {
     connection.close();
   }
 
+  // create basic properties that may optionally partially simulate RM message properties.
+  private BasicProperties createBasicProperties(GenericEvent genericEvent) {
+    BasicProperties props = null;
+    if (this.addRmProperties) {
+      var headers = new HashMap<String, Object>();
+      EventType type = genericEvent.getEvent().getType();
+      switch (type) {
+        case CASE_CREATED:
+        case CASE_UPDATED:
+        case UAC_CREATED:
+        case UAC_UPDATED:
+          headers.put("__TypeId__", "uk.gov.ons.census.casesvc.model.dto.ResponseManagementEvent");
+          break;
+        default:
+          break;
+      }
+
+      props =
+          new BasicProperties.Builder()
+              .contentType("application/json")
+              .contentEncoding("UTF-8")
+              .headers(headers)
+              .priority(0)
+              .build();
+    }
+    return props;
+  }
+
   @Override
   public void sendEvent(RoutingKey routingKey, GenericEvent genericEvent) {
+    BasicProperties props = createBasicProperties(genericEvent);
     try {
       channel.basicPublish(
           exchange,
           routingKey.getKey(),
-          null,
+          props,
           objectMapper.writeValueAsString(genericEvent).getBytes("UTF-8"));
     } catch (IOException e) {
       throw new RuntimeException(e);

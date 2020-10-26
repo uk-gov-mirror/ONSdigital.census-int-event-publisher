@@ -46,7 +46,9 @@ public class RabbitHelper {
 
   private ObjectMapper mapper = new ObjectMapper();
 
-  private RabbitHelper(RabbitConnectionDetails rabbitDetails, String exchange) throws CTPException {
+  private RabbitHelper(
+      RabbitConnectionDetails rabbitDetails, String exchange, boolean addRmProperties)
+      throws CTPException {
 
     ConnectionFactory factory = new ConnectionFactory();
     factory.setUsername(rabbitDetails.getUsername());
@@ -63,19 +65,21 @@ public class RabbitHelper {
       throw new CTPException(Fault.SYSTEM_ERROR, e, errorMessage);
     }
 
-    NativeRabbitEventSender sender = new NativeRabbitEventSender(this.rabbit, exchange);
+    NativeRabbitEventSender sender =
+        new NativeRabbitEventSender(this.rabbit, exchange, addRmProperties);
     eventPublisher = EventPublisher.createWithoutEventPersistence(sender);
 
     this.exchange = exchange;
   }
 
-  public static synchronized RabbitHelper instance(String exchange) throws CTPException {
+  public static synchronized RabbitHelper instance(String exchange, boolean addRmProperties)
+      throws CTPException {
     if (instance == null) {
       YmlConfigReader ymlConfig = new YmlConfigReader(RABBIT_YML_FILENAME);
       RabbitConnectionDetails rabbitDetails =
           ymlConfig.convertToObject(RabbitConnectionDetails.class);
 
-      instance = new RabbitHelper(rabbitDetails, exchange);
+      instance = new RabbitHelper(rabbitDetails, exchange, addRmProperties);
     }
 
     if (!instance.exchange.equals(exchange)) {
