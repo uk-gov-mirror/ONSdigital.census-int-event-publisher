@@ -21,6 +21,7 @@ import uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedResponse;
 import uk.gov.ons.ctp.common.event.model.RespondentRefusalDetails;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
 import uk.gov.ons.ctp.common.event.model.UAC;
+import uk.gov.ons.ctp.common.event.model.Webform;
 import uk.gov.ons.ctp.common.event.persistence.EventBackupData;
 import uk.gov.ons.ctp.common.event.persistence.EventPersistence;
 
@@ -60,7 +61,8 @@ public class EventPublisher {
     EVENT_FIELD_CASE_UPDATE("event.fieldcase.update", EventType.FIELD_CASE_UPDATED),
     EVENT_SAMPLE_UNIT_UPDATE("event.sampleunit.update", EventType.SAMPLE_UNIT_VALIDATED),
     EVENT_CCS_PROPERTY_LISTING("event.ccs.propertylisting", EventType.CCS_PROPERTY_LISTED),
-    FEEDBACK("event.website.feedback", EventType.FEEDBACK);
+    FEEDBACK("event.website.feedback", EventType.FEEDBACK),
+    WEBFORM_REQUEST("event.rh.webform", EventType.WEB_FORM_REQUEST);
 
     private String key;
     private List<EventType> eventTypes;
@@ -103,7 +105,8 @@ public class EventPublisher {
     UAC_CREATED(UAC.class, EventBuilder.UAC_CREATED),
     UAC_UPDATED(UAC.class, EventBuilder.UAC_UPDATED),
     UNDELIVERED_MAIL_REPORTED,
-    FEEDBACK(Feedback.class, EventBuilder.FEEDBACK);
+    FEEDBACK(Feedback.class, EventBuilder.FEEDBACK),
+    WEB_FORM_REQUEST(Webform.class, EventBuilder.WEBFORM_REQUEST);
 
     private Class<? extends EventPayload> payloadType;
     private EventBuilder builder;
