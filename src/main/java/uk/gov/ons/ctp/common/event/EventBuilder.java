@@ -72,7 +72,7 @@ public abstract class EventBuilder {
   public static final EventBuilder NEW_ADDRESS_REPORTED = new NewAddressReportedBuilder();
   public static final EventBuilder FEEDBACK = new FeedbackBuilder();
   public static final EventBuilder QUESTIONNAIRE_LINKED = new QuestionnaireLinkedBuilder();
-  public static final EventBuilder WEBFORM_REQUEST = new WebformBuilder();
+  public static final EventBuilder WEB_FORM_REQUEST = new WebformBuilder();
 
   ObjectMapper objectMapper = new CustomObjectMapper();
 

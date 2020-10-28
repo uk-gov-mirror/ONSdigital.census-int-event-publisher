@@ -62,7 +62,7 @@ public class EventPublisher {
     EVENT_SAMPLE_UNIT_UPDATE("event.sampleunit.update", EventType.SAMPLE_UNIT_VALIDATED),
     EVENT_CCS_PROPERTY_LISTING("event.ccs.propertylisting", EventType.CCS_PROPERTY_LISTED),
     FEEDBACK("event.website.feedback", EventType.FEEDBACK),
-    WEBFORM_REQUEST("event.rh.webform", EventType.WEB_FORM_REQUEST);
+    WEB_FORM_REQUEST("event.rh.webform", EventType.WEB_FORM_REQUEST);
 
     private String key;
     private List<EventType> eventTypes;
@@ -106,7 +106,7 @@ public class EventPublisher {
     UAC_UPDATED(UAC.class, EventBuilder.UAC_UPDATED),
     UNDELIVERED_MAIL_REPORTED,
     FEEDBACK(Feedback.class, EventBuilder.FEEDBACK),
-    WEB_FORM_REQUEST(Webform.class, EventBuilder.WEBFORM_REQUEST);
+    WEB_FORM_REQUEST(Webform.class, EventBuilder.WEB_FORM_REQUEST);
 
     private Class<? extends EventPayload> payloadType;
     private EventBuilder builder;
