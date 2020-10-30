@@ -38,7 +38,7 @@ public class NativeRabbitEventSender implements EventSender {
       channel.exchangeDeclare(exchange, "topic", true);
     } catch (IOException e) {
       String errorMessage = "Failed to create Rabbit channel";
-      log.error(e, errorMessage);
+      log.with("exchange", exchange).error(e, errorMessage);
       throw new CTPException(Fault.SYSTEM_ERROR, errorMessage);
     }
 
@@ -63,7 +63,7 @@ public class NativeRabbitEventSender implements EventSender {
       return factory.newConnection();
     } catch (IOException | TimeoutException e) {
       String errorMessage = "Failed to connect to Rabbit";
-      log.error(e, errorMessage);
+      log.with("connectionDetails", connectionDetails).error(e, errorMessage);
       throw new CTPException(Fault.SYSTEM_ERROR, errorMessage);
     }
   }

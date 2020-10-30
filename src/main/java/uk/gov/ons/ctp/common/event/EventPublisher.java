@@ -223,7 +223,7 @@ public class EventPublisher {
     EventType type = event.getEventType();
     SendInfo sendInfo = type.getBuilder().create(event.getEvent());
     if (sendInfo == null) {
-      log.error("Unrecognised event type {}", type);
+      log.with("type", type).error("Unrecognised event type");
       throw new UnsupportedOperationException("Unknown event: " + type);
     }
     String transactionId = doSendEvent(type, sendInfo);
@@ -268,7 +268,8 @@ public class EventPublisher {
       boolean backup = eventPersistence != null;
       log.with("eventType", eventType)
           .with("routingKey", routingKey)
-          .error("Failed to send event {}", backup ? ", but will now backup to firestore" : "");
+          .with("backup", backup)
+          .error(e, "Failed to send event but will now backup to firestore");
 
       if (!backup) {
         throw new EventPublishException("Rabbit failed to send event", e);
@@ -284,8 +285,7 @@ public class EventPublisher {
         // There is no hope. Neither Rabbit or Persistence are working
         log.with("eventType", eventType)
             .with("routingKey", routingKey)
-            .with("exception", epe)
-            .error("Backup event persistence failed following Rabbit failure");
+            .error(epe, "Backup event persistence failed following Rabbit failure");
         throw new EventPublishException(
             "Backup event persistence failed following Rabbit failure", e);
       }

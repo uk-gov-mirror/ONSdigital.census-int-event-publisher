@@ -61,7 +61,7 @@ public class RabbitHelper {
       this.rabbit = factory.newConnection();
     } catch (IOException | TimeoutException e) {
       String errorMessage = "Failed to connect to RabbitMQ";
-      log.error(errorMessage, e);
+      log.with("exchange", exchange).error(errorMessage, e);
       throw new CTPException(Fault.SYSTEM_ERROR, e, errorMessage);
     }
 
@@ -156,7 +156,7 @@ public class RabbitHelper {
       RoutingKey routingKey = RoutingKey.forType(eventType);
       if (routingKey == null) {
         String errorMessage = "Routing key for eventType '" + eventType + "' not configured";
-        log.error(errorMessage);
+        log.with("eventType", eventType).error(errorMessage);
         throw new UnsupportedOperationException(errorMessage);
       }
 
@@ -192,7 +192,7 @@ public class RabbitHelper {
     } catch (IOException e) {
       channel = null;
       String errorMessage = "Failed to flush queue '" + queueName + "'";
-      log.error(errorMessage, e);
+      log.with("queueName", queueName).error(errorMessage, e);
       throw new CTPException(Fault.SYSTEM_ERROR, e, errorMessage);
     }
   }
@@ -216,7 +216,10 @@ public class RabbitHelper {
 
     } catch (Exception e) {
       String errorMessage = "Failed to send message. Cause: " + e.getMessage();
-      log.error(errorMessage, e);
+      log.with("eventType", eventType)
+          .with("source", source)
+          .with("channel", channel)
+          .error(errorMessage, e);
       throw new CTPException(Fault.SYSTEM_ERROR, errorMessage, e);
     }
   }
@@ -296,7 +299,7 @@ public class RabbitHelper {
 
     } catch (IOException e) {
       String errorMessage = "Failed to convert message to object of type '" + clazz.getName() + "'";
-      log.error(errorMessage, e);
+      log.with("queueName", queueName).error(errorMessage, e);
       throw new CTPException(Fault.SYSTEM_ERROR, e, errorMessage);
     }
   }
@@ -316,7 +319,7 @@ public class RabbitHelper {
     } catch (IOException e) {
       channel = null;
       String errorMessage = "Failed to flush queue '" + queueName + "'";
-      log.error(errorMessage, e);
+      log.with("queueName", queueName).error(errorMessage, e);
       throw new CTPException(Fault.SYSTEM_ERROR, e, errorMessage);
     }
 
