@@ -323,6 +323,6 @@ public class EventPublisher {
     sender.sendEvent(routingKey, genericEvent);
     log.with("eventType", eventType)
         .with("routingKey", routingKey)
-        .info("Message sent successfully by rabbit");
+        .info("Message sent successfully to rabbit");
   }
 }
