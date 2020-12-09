@@ -319,10 +319,10 @@ public class EventPublisher {
     EventType eventType = genericEvent.getEvent().getType();
     log.with("eventType", eventType)
         .with("routingKey", routingKey)
-        .debug("Sending message {}", loggingMsgSuffix);
+        .info("Sending message to rabbit {}", loggingMsgSuffix);
     sender.sendEvent(routingKey, genericEvent);
     log.with("eventType", eventType)
         .with("routingKey", routingKey)
-        .debug("Message sent successfully");
+        .info("Message sent successfully to rabbit");
   }
 }
