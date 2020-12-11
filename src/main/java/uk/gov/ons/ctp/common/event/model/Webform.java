@@ -46,4 +46,6 @@ public class Webform implements EventPayload {
   @NotNull
   @LoggingScope(scope = Scope.SKIP)
   private String email;
+
+  private String clientIP;
 }
