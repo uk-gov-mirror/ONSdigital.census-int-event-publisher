@@ -47,9 +47,6 @@ import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
 import uk.gov.ons.ctp.common.event.model.UAC;
 import uk.gov.ons.ctp.common.event.model.UACEvent;
 import uk.gov.ons.ctp.common.event.model.UACPayload;
-import uk.gov.ons.ctp.common.event.model.Webform;
-import uk.gov.ons.ctp.common.event.model.WebformEvent;
-import uk.gov.ons.ctp.common.event.model.WebformPayload;
 import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
 
 /**
@@ -72,7 +69,6 @@ public abstract class EventBuilder {
   public static final EventBuilder NEW_ADDRESS_REPORTED = new NewAddressReportedBuilder();
   public static final EventBuilder FEEDBACK = new FeedbackBuilder();
   public static final EventBuilder QUESTIONNAIRE_LINKED = new QuestionnaireLinkedBuilder();
-  public static final EventBuilder WEB_FORM_REQUEST = new WebformBuilder();
 
   ObjectMapper objectMapper = new CustomObjectMapper();
 
@@ -416,25 +412,6 @@ public abstract class EventBuilder {
     SendInfo create(String json) {
       GenericEvent genericEvent = deserialiseEventJson(json, QuestionnaireLinkedEvent.class);
       EventPayload payload = ((QuestionnaireLinkedEvent) genericEvent).getPayload().getUac();
-      return build(genericEvent, payload);
-    }
-  }
-
-  public static class WebformBuilder extends EventBuilder {
-    @Override
-    GenericEvent create(SendInfo sendInfo) {
-      WebformEvent webformEvent = new WebformEvent();
-      webformEvent.setEvent(
-          buildHeader(EventType.WEB_FORM_REQUEST, sendInfo.getSource(), sendInfo.getChannel()));
-      WebformPayload webformPayload = new WebformPayload((Webform) sendInfo.getPayload());
-      webformEvent.setPayload(webformPayload);
-      return webformEvent;
-    }
-
-    @Override
-    SendInfo create(String json) {
-      GenericEvent genericEvent = deserialiseEventJson(json, WebformEvent.class);
-      EventPayload payload = ((WebformEvent) genericEvent).getPayload().getWebform();
       return build(genericEvent, payload);
     }
   }

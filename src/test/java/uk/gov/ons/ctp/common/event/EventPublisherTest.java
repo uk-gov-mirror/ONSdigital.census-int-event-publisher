@@ -58,8 +58,6 @@ import uk.gov.ons.ctp.common.event.model.SurveyLaunchedEvent;
 import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
 import uk.gov.ons.ctp.common.event.model.UAC;
 import uk.gov.ons.ctp.common.event.model.UACEvent;
-import uk.gov.ons.ctp.common.event.model.Webform;
-import uk.gov.ons.ctp.common.event.model.WebformEvent;
 import uk.gov.ons.ctp.common.event.persistence.EventBackupData;
 import uk.gov.ons.ctp.common.event.persistence.FirestoreEventPersistence;
 import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
@@ -86,7 +84,6 @@ public class EventPublisherTest {
   @Captor private ArgumentCaptor<FeedbackEvent> feedbackEventCaptor;
   @Captor private ArgumentCaptor<NewAddressReportedEvent> newAddressReportedEventCaptor;
   @Captor private ArgumentCaptor<QuestionnaireLinkedEvent> questionnaireLinkedEventCaptor;
-  @Captor private ArgumentCaptor<WebformEvent> webformEventCaptor;
 
   private Date startOfTestDateTime;
 
@@ -375,21 +372,6 @@ public class EventPublisherTest {
     assertSendUac(EventType.UAC_UPDATED);
   }
 
-  @Test
-  public void shouldSendWebformEvent() {
-    Webform payload = loadJson(Webform[].class);
-    String transactionId =
-        eventPublisher.sendEvent(
-            EventType.WEB_FORM_REQUEST, Source.RESPONDENT_HOME, Channel.RH, payload);
-    RoutingKey routingKey = RoutingKey.forType(EventType.WEB_FORM_REQUEST);
-    verify(sender, times(1)).sendEvent(eq(routingKey), webformEventCaptor.capture());
-
-    WebformEvent event = webformEventCaptor.getValue();
-    assertHeader(
-        event, transactionId, EventType.WEB_FORM_REQUEST, Source.RESPONDENT_HOME, Channel.RH);
-    assertEquals(payload, event.getPayload().getWebform());
-  }
-
   @Test(expected = IllegalArgumentException.class)
   public void shouldRejectSendForMismatchingPayload() {
     Feedback feedbackResponse = loadJson(Feedback[].class);
@@ -544,16 +526,6 @@ public class EventPublisherTest {
     verifyEventSent(ev, questionnaireLinkedEventCaptor.getValue());
   }
 
-  @Test
-  public void shouldSendBackupWebformEvent() throws Exception {
-    WebformEvent ev = aWebformEvent();
-    sendBackupEvent(ev);
-
-    RoutingKey routingKey = RoutingKey.forType(EventType.WEB_FORM_REQUEST);
-    verify(sender).sendEvent(eq(routingKey), webformEventCaptor.capture());
-    verifyEventSent(ev, webformEventCaptor.getValue());
-  }
-
   @Test(expected = UnsupportedOperationException.class)
   public void shouldRejectEventWithoutPayload() throws Exception {
     QuestionnaireLinkedEvent ev = aQuestionnaireLinkedEvent();
@@ -642,10 +614,6 @@ public class EventPublisherTest {
 
   QuestionnaireLinkedEvent aQuestionnaireLinkedEvent() {
     return FixtureHelper.loadPackageFixtures(QuestionnaireLinkedEvent[].class).get(0);
-  }
-
-  WebformEvent aWebformEvent() {
-    return FixtureHelper.loadPackageFixtures(WebformEvent[].class).get(0);
   }
 
   private <T> T loadJson(Class<T[]> clazz) {
