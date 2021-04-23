@@ -3,7 +3,6 @@ This project contains a utility class for creating and publishing Rabbit AMQP Ce
 
 
 
-
 ## Copyright
 Copyright (C) 2019 Crown Copyright (Office for National Statistics)
 
